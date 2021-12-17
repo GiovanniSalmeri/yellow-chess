@@ -1,0 +1,31 @@
+# Chess extension, https://github.com/GiovanniSalmeri/yellow-chess
+
+Language: en
+ChessColors: White,Black
+ChessPieces: king,queen,rocks,bishops,knights,pawns
+ChessToMove: @color to move
+
+Language: de
+ChessColors: Weiß,Schwarz
+ChessPieces: König,Dame,Türme,Läufer,Springer,Bauern
+ChessToMove: @color am Zug
+
+Language: fr
+ChessColors: Blanc,Noir
+ChessPieces: roi,dame,tours,fous,cavaliers,pions
+ChessToMove: Trait aux @colors
+
+Language: it
+ChessColors: Bianco,Nero
+ChessPieces: re,donna,torri,alfieri,cavalli,pedoni
+ChessToMove: Muove il @color
+
+Language: es
+ChessColors: Blanco,Negro
+ChessPieces: rey,dama,torres,alfiles,caballos,peones
+ChessToMove: Mueve el @color
+
+Language: pt
+ChessColors: Branco,Preto
+ChessPieces: rei,dama,torres,bispos,cavalos,peões
+ChessToMove: @color para mover
