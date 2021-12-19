@@ -30,6 +30,7 @@ class YellowChess {
                         $colorList = [];
                         foreach ($color as $pieceKey=>$piece) {
                             if ($decoded['pieces'][$piece]) {
+                                sort($decoded['pieces'][$piece]);
                                 $colorList[] = $pieceNames[$pieceKey]." ".implode(", ", $decoded['pieces'][$piece]);
                             }
                         }
