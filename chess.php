@@ -24,6 +24,7 @@ class YellowChess {
                 if ($chessPieceList) {      
                     $colorNames = explode(",", $this->yellow->language->getText("chessColors"));
                     $pieceNames = explode(",", $this->yellow->language->getText("chessPieces"));
+                    $pieceNamesPlural = explode(",", $this->yellow->language->getText("chessPiecesPlural"));
                     $pieceList = "";
                     foreach ([str_split('KQRBNP'), str_split('kqrbnp')] as $colorKey=>$color) {
                         $pieceList .= $colorNames[$colorKey].": ";
@@ -31,7 +32,7 @@ class YellowChess {
                         foreach ($color as $pieceKey=>$piece) {
                             if ($decoded['pieces'][$piece]) {
                                 sort($decoded['pieces'][$piece]);
-                                $colorList[] = $pieceNames[$pieceKey]." ".implode(", ", $decoded['pieces'][$piece]);
+                                $colorList[] = count($decoded['pieces'][$piece])==1 ? $pieceNames[$pieceKey]." ".$decoded['pieces'][$piece][0] : $pieceNamesPlural[$pieceKey]." ".implode(", ", $decoded['pieces'][$piece]);
                             }
                         }
                         $pieceList .= implode("; ", $colorList).". ";

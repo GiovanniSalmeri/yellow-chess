@@ -2,30 +2,36 @@
 
 Language: en
 ChessColors: White,Black
-ChessPieces: king,queen,rocks,bishops,knights,pawns
+ChessPieces: king,queen,rock,bishop,knight,pawn
+ChessPiecesPlural: kings,queens,rocks,bishops,knights,pawns
 ChessToMove: @color to move
 
 Language: de
 ChessColors: Weiß,Schwarz
-ChessPieces: König,Dame,Türme,Läufer,Springer,Bauern
+ChessPieces: König,Dame,Turm,Läufer,Springer,Bauer
+ChessPiecesPlural: Könige,Damen,Türme,Läufer,Springer,Bauern
 ChessToMove: @color am Zug
 
 Language: fr
 ChessColors: Blanc,Noir
-ChessPieces: roi,dame,tours,fous,cavaliers,pions
+ChessPieces: roi,dame,tour,fou,cavalier,pion
+ChessPiecesPlural: rois,dames,tours,fous,cavaliers,pions
 ChessToMove: Trait aux @colors
 
 Language: it
 ChessColors: Bianco,Nero
-ChessPieces: re,donna,torri,alfieri,cavalli,pedoni
+ChessPieces: re,donna,torre,alfiere,cavallo,pedone
+ChessPiecesPlural: re,donne,torri,alfieri,cavalli,pedoni
 ChessToMove: Muove il @color
 
 Language: es
 ChessColors: Blanco,Negro
-ChessPieces: rey,dama,torres,alfiles,caballos,peones
+ChessPieces: rey,dama,torre,alfil,caballo,peón
+ChessPiecesPlural: reyes,damas,torres,alfiles,caballos,peones
 ChessToMove: Mueve el @color
 
 Language: pt
 ChessColors: Branco,Preto
-ChessPieces: rei,dama,torres,bispos,cavalos,peões
+ChessPieces: rei,dama,torre,bispo,cavalo,peão
+ChessPiecesPlural: reis,damas,torres,bispos,cavalos,peões
 ChessToMove: @color para mover
