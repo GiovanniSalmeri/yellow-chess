@@ -35,3 +35,9 @@ ChessColors: Branco,Preto
 ChessPieces: rei,dama,torre,bispo,cavalo,peão
 ChessPiecesPlural: reis,damas,torres,bispos,cavalos,peões
 ChessToMove: @color para mover
+
+Language: nl
+ChessColors: Wit,Zwart
+ChessPieces: koning,dame,toren,loper,paard,pion
+ChessPiecesPlural: koningen,dames,torens,lopers,paarden,pionnen
+ChessToMove: @color aan zet
