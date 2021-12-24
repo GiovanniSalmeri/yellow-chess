@@ -1,0 +1,14 @@
+.content header.chess-header {
+    padding: 0.5em;
+    background-color: #f7f7f7;
+    font-size: 1em;
+    margin-top: 1em;
+    margin-bottom: 1em;
+}
+.content p.chess-moves {
+    /* Put in bold if you have to distinguish from hypothetical moves mentioned in the commentary */
+     /*font-weight: bold; */
+}
+.content span.chess-move {
+    white-space: nowrap;
+}

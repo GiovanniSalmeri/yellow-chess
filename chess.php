@@ -8,98 +8,187 @@ class YellowChess {
     // Handle initialisation
     public function onLoad($yellow) {
         $this->yellow = $yellow;
+        $this->yellow->system->setDefault("chessDirectory", "media/chess/");
+        $this->yellow->system->setDefault("chessMoveStyle", "figurines"); // standard, letters
+        $this->yellow->system->setDefault("chessShowCoordinates", "0");
         $this->yellow->system->setDefault("chessShowDots", "1");
-        $this->yellow->system->setDefault("chessPieceList", "0");
         $this->yellow->system->setDefault("chessWidth", "300");
+        $this->yellow->system->setDefault("chessPieceList", "0");
     }
 
     // Handle page content of shortcut
     public function onParseContentShortcut($page, $name, $text, $type) {
         $output = null;
+        $errors = [];
         if ($name=="chess" && ($type=="block" || $type=="inline")) {
-            list($fen, $style, $width) = $this->yellow->toolbox->getTextArguments($text);
-            $decoded = $this->decodeFEN($fen); // several keys presently unused
-            if (!$decoded['errors']) {
-                $chessPieceList = $this->yellow->system->get("chessPieceList");
-                if ($chessPieceList) {      
-                    $colorNames = explode(",", $this->yellow->language->getText("chessColors"));
-                    $pieceNames = explode(",", $this->yellow->language->getText("chessPieces"));
-                    $pieceNamesPlural = explode(",", $this->yellow->language->getText("chessPiecesPlural"));
-                    $pieceList = "";
-                    foreach ([str_split('KQRBNP'), str_split('kqrbnp')] as $colorKey=>$color) {
-                        $pieceList .= $colorNames[$colorKey].": ";
-                        $colorList = [];
-                        foreach ($color as $pieceKey=>$piece) {
-                            if ($decoded['pieces'][$piece]) {
-                                sort($decoded['pieces'][$piece]);
-                                $colorList[] = count($decoded['pieces'][$piece])==1 ? $pieceNames[$pieceKey]." ".$decoded['pieces'][$piece][0] : $pieceNamesPlural[$pieceKey]." ".implode(", ", $decoded['pieces'][$piece]);
-                            }
-                        }
-                        $pieceList .= implode("; ", $colorList).". ";
-                    }
-                    $pieceList .= str_replace("@color", $decoded['active']=="w" ? $colorNames[0] : $colorNames[1], $this->yellow->language->getText("chessToMove"));
+            list($chess, $style, $width) = $this->yellow->toolbox->getTextArguments($text);
+            if (preg_match('/^\S+\.pgn(\s|$)/', $chess)) { // PGN
+                $fileName = $first = $last = $mode = null;
+                $parts = array_pad(preg_split('/\s+/', $chess, 4), 3, null);
+                $fileName = $parts[0];
+                if (preg_match('/^(begin|end|\d+[wb])(?:-(begin|end|\d+[wb]))?$/', $parts[1], $matches)) {
+                    $first = $this->getPlyFromMove($matches[1]);
+                    $last = isset($matches[2]) ? $this->getPlyFromMove($matches[2]) : $first;
+                } else { // default values
+                    $first = "begin";
+                    $last = "end";
                 }
-                if (empty($width)) $width = $this->yellow->system->get("chessWidth");
-                $output = "<img src=\"data:image/svg+xml;base64,".base64_encode($decoded['board'])."\"";
-                $output .= " width=\"".htmlspecialchars($width)."\" height=\"".htmlspecialchars($width)."\"";
-                $output .= " alt=\"".htmlspecialchars($chessPieceList ? $pieceList : $fen)."\" title=\"".htmlspecialchars($chessPieceList ? $pieceList : $fen)."\"";
-                if (!empty($style)) $output .= " class=\"".htmlspecialchars($style)."\"";
-                $output .= " />";
+                if (preg_match('/moves|diagram|all/', $parts[2])) {
+                    $mode = $parts[2];
+                } else { // default value
+                    $mode = "all";
+                }
+                $path = $this->yellow->system->get("chessDirectory");
+                $game = $this->getGameFromPgn($path.$fileName);
+                if ($game!==false) {
+                    if ($mode!=="moves") {
+                        if ($last==="begin") {
+                            $plyNumber = 0;
+                        } elseif ($last==="end") {
+                            $plyNumber = null;
+                        } else {
+                            $plyNumber = $last+1;
+                        }
+                        $position = $this->getPositionFromGame($game['moves'], $plyNumber, isset($game['FEN']) ? $game['FEN'] : null);
+                    }
+                    if ($mode!=="diagram" && !$position['errors']) {
+                        $output .= $this->outputMoves($game, $first, $last);
+                    }
+                } else {
+                    $errors[] = "Missing ".htmlspecialchars($fileName);
+                }
+            } else { // FEN
+                $position = $this->getPositionFromFen($chess);
+            }
+
+            if (!$errors) {
+                if (!isset($mode) || $mode!=="moves") {
+                    if (!$position['errors']) {
+                        $chessPieceList = $this->yellow->system->get("chessPieceList");
+                        if ($chessPieceList) {
+                            $pieceTable = [];
+                            $columnIndexes = "abcdefgh";
+                            $rowIndexes = "87654321";
+                            for ($x=0; $x<=7; $x++) {
+                                for ($y=7; $y>=0; $y--) {
+                                    if ($position['board'][$y][$x]) {
+                                        $pieceTable[$position['board'][$y][$x]][] = $columnIndexes[$x].$rowIndexes[$y];
+                                    }
+                                }
+                            }
+                            $colorNames = preg_split('/\s*,\s*/', $this->yellow->language->getText("chessColors"));
+                            $pieceNames = preg_split('/\s*,\s*/', $this->yellow->language->getText("chessPieces"));
+                            $pieceNamesPlural = preg_split('/\s*,\s*/', $this->yellow->language->getText("chessPiecesPlural"));
+                            $pieceList = "";
+                            foreach ([str_split('KQRBNP'), str_split('kqrbnp')] as $colorKey=>$color) {
+                                $pieceList .= $colorNames[$colorKey].": ";
+                                $colorList = [];
+                                foreach ($color as $pieceKey=>$piece) {
+                                    if (isset($pieceTable[$piece])) {
+                                        $colorList[] = count($pieceTable[$piece])==1 ? $pieceNames[$pieceKey]." ".$pieceTable[$piece][0] : $pieceNamesPlural[$pieceKey]." ".implode(", ", $pieceTable[$piece]);
+                                    }
+                                }
+                                $pieceList .= implode("; ", $colorList).". ";
+                            }
+                            $pieceList .= str_replace("@color", !$position['active'] ? $colorNames[0] : $colorNames[1], $this->yellow->language->getText("chessToMove"));
+                        } else {
+                            $pieceList = isset($mode) ? $this->getFenFromPosition($position) : $chess;
+                        }
+                        if (empty($width)) $width = $this->yellow->system->get("chessWidth");
+    	            $svg = $this->drawBoardFromPosition($position);
+                        $output .= "<img src=\"data:image/svg+xml;base64,".base64_encode($svg)."\"";
+                        $output .= " width=\"".htmlspecialchars($width)."\" height=\"".htmlspecialchars($width)."\"";
+                        $output .= " alt=\"".htmlspecialchars($pieceList)."\" title=\"".htmlspecialchars($pieceList)."\"";
+                        if (!empty($style)) $output .= " class=\"".htmlspecialchars($style)."\"";
+                        $output .= " />\n";
+                    } else {
+                        $output .= "<strong>[chess: ".implode(", ", $position['errors'])."]</strong>";
+                    }
+                }
             } else {
-                $output .= "<strong>[chess: ".implode(", ", $decoded['errors'])."]</strong>";
+		$output .= "<strong>[chess: ".implode(", ", $errors)."]</strong>";
             }
         }
         return $output;
     }
 
-    // Check and decode FEN description
-    public function decodeFEN($fen) {
+    // Decode FEN
+    private function getPositionFromFen($fen) {
         $parts = explode(" ", $fen);
-        $result = [];
-        $result['board'] = $result['active'] = $result['castling'] = $result['enpassant'] = $result['halfmove'] = $result['fullmove'] = null;
-        $result['errors'] = [];
-        $result['pieces'] = [
-            'K'=>[],
-            'Q'=>[],
-            'R'=>[],
-            'B'=>[],
-            'N'=>[],
-            'P'=>[],
-            'k'=>[],
-            'q'=>[],
-            'r'=>[],
-            'b'=>[],
-            'n'=>[],
-            'p'=>[],
-        ];
-        $columnIndexes = "abcdefgh";
-        $rowIndexes = "87654321";
+        $position = [];
+        $position['board'] = $position['active'] = $position['castling'] = $position['halfmoves'] = $position['fullmoves'] = null;
+        $position['enpassant'] = [ null, null ];
+        $position['errors'] = [];
 
-        // Other fields
+        // board
+        $position['board'] = array_fill(0, 8, array_fill(0, 8, null));
+        $currentColumn = $currentRow = 0;
+        $invalidChar = false;
+        for ($i = 0; $i<strlen($parts[0]); $i++) {
+            if (strpos("12345678", $parts[0][$i])!==false) {
+                for ($j=1; $j<=$parts[0][$i]; $j++) {
+                    $currentColumn += 1;
+                }
+            } elseif (strpos("BKNPQRbknpqr", $parts[0][$i])!==false) {
+                $position['board'][$currentRow][$currentColumn] = $parts[0][$i];
+                $currentColumn += 1;
+            } elseif ($parts[0][$i]==="/") {
+                if ($currentColumn<8) break;
+                $currentColumn = 0;
+                $currentRow += 1;
+            } else {
+                $invalidChar = true; break;
+            }
+            if ($currentRow>7 || $currentColumn>8) break;
+        }
+        if ($invalidChar) {
+            $position['errors'][] = "Invalid char at pos $i";
+        } elseif ($currentRow>7) {
+            $position['errors'][] = "Too many rows at pos $i";
+        } elseif ($currentColumn>8) {
+            $position['errors'][] = "Too many columns at pos $i";
+        } elseif ($currentColumn<8) {
+            $position['errors'][] = "Too few columns at pos $i";
+        } elseif ($currentRow<7) {
+            $position['errors'][] = "Too few rows at pos $i";
+        }
+
+        // other fields
         $fields = [
             ['active', '/^[bw]$/'],
             ['castling', '/^K?Q?k?q?$/'],
             ['enpassant', '/^[a-h][36]$/'],
-            ['halfmove', '/^[\d]+$/'],
-            ['fullmove', '/^[\d]+$/']
+            ['halfmoves', '/^[\d]+$/'],
+            ['fullmoves', '/^[\d]+$/']
         ];
+
         foreach (array_slice($parts, 1) as $index=>$part) {
             if (preg_match($fields[$index][1], $part)) {
-                $result[$fields[$index][0]] = $part;
+                $position[$fields[$index][0]] = $part;
             } elseif ($part!=="-" || $index==0) {
-                $result['errors'][] = "Invalid char in field {$fields[$index][0]}";
+                $position['errors'][] = "Invalid char in field {$fields[$index][0]}";
             }
         }
 
-        // Board (SVG with some modifications from https://chess.zukeran.org/chess-draw/)
-        $result['board'] = '<svg viewBox="39 39 403 403" version="1.1" xmlns="http://www.w3.org/2000/svg">
+        $letToNum = [ 'a'=>0, 'b'=>1, 'c'=>2, 'd'=>3, 'e'=>4, 'f'=>5, 'g'=>6, 'h'=>7, ''=>null ];
+        $numToNum = [ '1'=>7, '2'=>6, '3'=>5, '4'=>4, '5'=>3, '6'=>2, '7'=>1, '8'=>0, ''=>null ];
+        $position['active'] = $position['active']=='w';
+        $position['castling'] = array_filter(['K'=>true, 'Q'=>true, 'k'=>true, 'q'=>true ], function($key) use ($position) { return strpos($position['castling'], $key)!==false; }, ARRAY_FILTER_USE_KEY);
+        $position['enpassant'] = $position['enpassant']=='-' ? [ null, null ] : [ $numToNum[$position['enpassant'][1]], $letToNum[$position['enpassant'][0]]];
+
+        return $position;
+    }
+
+    // Draw SVG board
+    private function drawBoardFromPosition($position) {
+        $svgBoard = '<svg viewBox="39 39 403 403" version="1.1" xmlns="http://www.w3.org/2000/svg">
+<style>.coord { font: 11px sans-serif; }</style>
 <desc>SVG Chess Board</desc>
-<desc id="fen">'.htmlspecialchars($fen, ENT_XML1).'</desc>
 <defs>
 <desc>This SVG contains wikimedia SVG chess pieces (CC BY-SA 3.0) from https://commons.wikimedia.org/wiki/Category:SVG_chess_pieces</desc>
 <g id="b">
   <g style="opacity:1; fill:none; fill-rule:evenodd; fill-opacity:1; stroke:#000000; stroke-width:1.5; stroke-linecap:round; stroke-linejoin:round; stroke-miterlimit:4; stroke-dasharray:none; stroke-opacity:1;">
-    <g style="fill:#000000; stroke:#000000; stroke-linecap:butt;"> 
+    <g style="fill:#000000; stroke:#000000; stroke-linecap:butt;">
       <path d="M 9,36 C 12.39,35.03 19.11,36.43 22.5,34 C 25.89,36.43 32.61,35.03 36,36 C 36,36 37.65,36.54 39,38 C 38.32,38.97 37.35,38.99 36,38.5 C 32.61,37.53 25.89,38.96 22.5,37.5 C 19.11,38.96 12.39,37.53 9,38.5 C 7.646,38.99 6.677,38.97 6,38 C 7.354,36.06 9,36 9,36 z"/>
       <path d="M 15,32 C 17.5,34.5 27.5,34.5 30,32 C 30.5,30.5 30,30 30,30 C 30,27.5 27.5,26 27.5,26 C 33,24.5 33.5,14.5 22.5,10.5 C 11.5,14.5 12,24.5 17.5,26 C 17.5,26 15,27.5 15,30 C 15,30 14.5,30.5 15,32 z"/>
       <path d="M 25 8 A 2.5 2.5 0 1 1  20,8 A 2.5 2.5 0 1 1  25 8 z"/>
@@ -109,7 +198,7 @@ class YellowChess {
 </g>
 <g id="B">
   <g style="opacity:1; fill:none; fill-rule:evenodd; fill-opacity:1; stroke:#000000; stroke-width:1.5; stroke-linecap:round; stroke-linejoin:round; stroke-miterlimit:4; stroke-dasharray:none; stroke-opacity:1;">
-    <g style="fill:#ffffff; stroke:#000000; stroke-linecap:butt;"> 
+    <g style="fill:#ffffff; stroke:#000000; stroke-linecap:butt;">
       <path d="M 9,36 C 12.39,35.03 19.11,36.43 22.5,34 C 25.89,36.43 32.61,35.03 36,36 C 36,36 37.65,36.54 39,38 C 38.32,38.97 37.35,38.99 36,38.5 C 32.61,37.53 25.89,38.96 22.5,37.5 C 19.11,38.96 12.39,37.53 9,38.5 C 7.646,38.99 6.677,38.97 6,38 C 7.354,36.06 9,36 9,36 z"/>
       <path d="M 15,32 C 17.5,34.5 27.5,34.5 30,32 C 30.5,30.5 30,30 30,30 C 30,27.5 27.5,26 27.5,26 C 33,24.5 33.5,14.5 22.5,10.5 C 11.5,14.5 12,24.5 17.5,26 C 17.5,26 15,27.5 15,30 C 15,30 14.5,30.5 15,32 z"/>
       <path d="M 25 8 A 2.5 2.5 0 1 1  20,8 A 2.5 2.5 0 1 1  25 8 z"/>
@@ -222,46 +311,343 @@ class YellowChess {
 <g id="board" fill="none" stroke="#000"><rect x="40.5" y="40.5" width="400" height="400" fill="#fff"/><rect x="40.5" y="90.5" width="50" height="50" fill="#ccc"/><rect x="40.5" y="190.5" width="50" height="50" fill="#ccc"/><rect x="40.5" y="290.5" width="50" height="50" fill="#ccc"/><rect x="40.5" y="390.5" width="50" height="50" fill="#ccc"/><rect x="90.5" y="40.5" width="50" height="50" fill="#ccc"/><rect x="90.5" y="140.5" width="50" height="50" fill="#ccc"/><rect x="90.5" y="240.5" width="50" height="50" fill="#ccc"/><rect x="90.5" y="340.5" width="50" height="50" fill="#ccc"/><rect x="140.5" y="90.5" width="50" height="50" fill="#ccc"/><rect x="140.5" y="190.5" width="50" height="50" fill="#ccc"/><rect x="140.5" y="290.5" width="50" height="50" fill="#ccc"/><rect x="140.5" y="390.5" width="50" height="50" fill="#ccc"/><rect x="190.5" y="40.5" width="50" height="50" fill="#ccc"/><rect x="190.5" y="140.5" width="50" height="50" fill="#ccc"/><rect x="190.5" y="240.5" width="50" height="50" fill="#ccc"/><rect x="190.5" y="340.5" width="50" height="50" fill="#ccc"/><rect x="240.5" y="90.5" width="50" height="50" fill="#ccc"/><rect x="240.5" y="190.5" width="50" height="50" fill="#ccc"/><rect x="240.5" y="290.5" width="50" height="50" fill="#ccc"/><rect x="240.5" y="390.5" width="50" height="50" fill="#ccc"/><rect x="290.5" y="40.5" width="50" height="50" fill="#ccc"/><rect x="290.5" y="140.5" width="50" height="50" fill="#ccc"/><rect x="290.5" y="240.5" width="50" height="50" fill="#ccc"/><rect x="290.5" y="340.5" width="50" height="50" fill="#ccc"/><rect x="340.5" y="90.5" width="50" height="50" fill="#ccc"/><rect x="340.5" y="190.5" width="50" height="50" fill="#ccc"/><rect x="340.5" y="290.5" width="50" height="50" fill="#ccc"/><rect x="340.5" y="390.5" width="50" height="50" fill="#ccc"/><rect x="390.5" y="40.5" width="50" height="50" fill="#ccc"/><rect x="390.5" y="140.5" width="50" height="50" fill="#ccc"/><rect x="390.5" y="240.5" width="50" height="50" fill="#ccc"/><rect x="390.5" y="340.5" width="50" height="50" fill="#ccc"/></g>
 <g id="pieces">';
 
-        $currentColumn = $currentRow = 0;
         $columnWidth = $columnRow = 50;
-        $xStart = 43.5;
-        $yStart = 44.5;
-        $invalidChar = false;
-        for ($i = 0; $i<strlen($parts[0]); $i++) {
-            if (strpos("12345678", $parts[0][$i])!==false) {
-                $currentColumn += $parts[0][$i];
-            } elseif (strpos("bknpqr", strtolower($parts[0][$i]))!==false) {
-                $x = $xStart + $currentColumn*$columnWidth;
-                $y = $yStart + $currentRow*$columnRow;
-                $result['board'] .= "<use xmlns:xlink=\"http://www.w3.org/1999/xlink\" xlink:href=\"#{$parts[0][$i]}\" href=\"#{$parts[0][$i]}\" x=\"{$x}\" y=\"{$y}\"/>";
-                $result['pieces'][$parts[0][$i]][] = @$columnIndexes[$currentColumn].@$rowIndexes[$currentRow];
-                $currentColumn += 1;
-            } elseif ($parts[0][$i]=="/") {
-                if ($currentColumn<8) break;
-                $currentColumn = 0;
-                $currentRow += 1;
-            } else {
-                $invalidChar = true; break;
+        foreach ($position['board'] as $currentRow=>$row) {
+            foreach ($row as $currentColumn=>$cell) {
+                if ($cell!==null) {
+                    $x = 43.5 + $currentColumn*$columnWidth;
+                    $y = 44.5 + $currentRow*$columnRow;
+                    $svgBoard .= "<use xmlns:xlink=\"http://www.w3.org/1999/xlink\" xlink:href=\"#{$cell}\" href=\"#{$cell}\" x=\"{$x}\" y=\"{$y}\"/>";
+                }
             }
-            if ($currentRow>7 || $currentColumn>8) break;
         }
-        if ($invalidChar) {
-            array_unshift($result['errors'], "Invalid char at pos $i");
-        } elseif ($currentRow>7) {
-            array_unshift($result['errors'], "Too many rows at pos $i");
-        } elseif ($currentColumn>8) {
-            array_unshift($result['errors'], "Too many columns at pos $i");
-        } elseif ($currentColumn<8) {
-            array_unshift($result['errors'], "Too few columns at pos $i");
-        } elseif ($currentRow<7) {
-            array_unshift($result['errors'], "Too few rows at pos $i");
-        } 
-        $result['board'] .= "</g>\n";
-        if ($this->yellow->system->get("chessShowDots") && $result['active']) {
-            $whiteToMove = $result['active']=="w";
-            $result['board'] .= "<circle id=\"active\" cx=\"432.5\" cy=\"".($whiteToMove ? "398.5" : "48.5")."\" r=\"3.5\" stroke=\"#000000\" stroke-width=\"1\" fill=\"".($whiteToMove ? "#ffffff" : "#000000")."\" />\n";
+        $svgBoard .= "</g>\n";
+        // dots
+        if ($this->yellow->system->get("chessShowDots")) {
+            $whiteToMove = !$position['active'];
+            $svgBoard .= "<circle id=\"active\" cx=\"432.5\" cy=\"".($whiteToMove ? "398.5" : "48.5")."\" r=\"3.5\" stroke=\"#000000\" stroke-width=\"1\" fill=\"".($whiteToMove ? "#ffffff" : "#000000")."\" />\n";
         }
-        $result['board'] .= "</svg>";
-        return $result;
+        // coordinates
+        if ($this->yellow->system->get("chessShowCoordinates")) {
+            foreach (str_split('ABCDEFGH') as $index=>$letter) {
+                $svgBoard .= "<text class=\"coord\" x=\"".(79+$index*$columnWidth)."\" y=\"437\">{$letter}</text>\n";
+            }
+            foreach (str_split('12345678') as $index=>$number) {
+                $svgBoard .= "<text class=\"coord\" x=\"43\" y=\"".(404-$index*$columnWidth)."\">{$number}</text>\n";
+            }
+        }
+        $svgBoard .= "</svg>";
+        return $svgBoard;
+    }
+
+    // Calculate game position
+    private function getPositionFromGame($moves, $plyNumber, $startingFen) {
+        $plyNumber = $plyNumber===null ? count($moves)-1 : $plyNumber;
+        $plyNumber = min($plyNumber, count($moves)-1);
+        $startingFen = $startingFen==null ? "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1" : $startingFen;
+        $position = $this->getPositionFromFen($startingFen);
+        $position['errors'] = [];
+
+        $letToNum = [ 'a'=>0, 'b'=>1, 'c'=>2, 'd'=>3, 'e'=>4, 'f'=>5, 'g'=>6, 'h'=>7, ''=>null ];
+        $numToNum = [ '1'=>7, '2'=>6, '3'=>5, '4'=>4, '5'=>3, '6'=>2, '7'=>1, '8'=>0, ''=>null ];
+
+        foreach (array_slice($moves, 0, $plyNumber) as $move) {
+            $piece = $capture = $promotion = $check = $castling = null;
+            $disambiguate = $destination = [ null, null ];
+            if (preg_match('/^([RNBQK])([a-h])?([1-8])?(x)?([a-h])([1-8])([+#])?$/', $move, $matches)) {
+                $piece = $matches[1];
+                $disambiguate = [ $numToNum[$matches[3]], $letToNum[$matches[2]] ];
+                $capture = $matches[4];
+                $destination = [ $numToNum[$matches[6]], $letToNum[$matches[5]] ];
+                $check = empty($matches[7]) ? "" : $matches[7];
+            } elseif (preg_match('/^(?:([a-h])(x))?([a-h])([1-8])(?:=([RNBQ]))?([+#])?$/', $move, $matches)) {
+                $piece = 'P';
+                $disambiguate = [ null, $letToNum[$matches[1]] ];
+                $capture = $matches[2];
+                $destination = [ $numToNum[$matches[4]], $letToNum[$matches[3]] ];
+                $promotion = empty($matches[5]) ? "" : $matches[5];
+                $check = empty($matches[6]) ? "" : $matches[6];
+            } elseif (preg_match('/^O-O(-O)?([+#])?$/', $move, $matches)) {
+                $castling = empty($matches[1]) ? 'K' : 'Q';
+                $check = empty($matches[2]) ? "" : $matches[2];
+            }
+
+            // executions of moves
+            if ($castling) { // no validity check
+                $castlingRow = $position['active'] ? 7 : 0;
+                $castlingColumns = $castling=='Q' ? [4, 2, 0, 3] : [4, 6, 7, 5];
+                $position['board'][$castlingRow][$castlingColumns[1]] = $position['board'][$castlingRow][$castlingColumns[0]];
+                $position['board'][$castlingRow][$castlingColumns[0]] = null;
+                $position['board'][$castlingRow][$castlingColumns[3]] = $position['board'][$castlingRow][$castlingColumns[2]];
+                $position['board'][$castlingRow][$castlingColumns[2]] = null;
+                unset($position['castling'][$position['active'] ? 'K' : 'k'], $position['castling'][$position['active'] ? 'Q' : 'q']);
+                $position['enpassant'] = [ null, null ];
+                $position['halfmoves'] += 1;
+            } else { // normal moves
+                $existingPieces = $this->getExistingPieces($position['board'], $position['active'], $piece, $disambiguate);
+                if (count($existingPieces)===0) {
+                    $position['errors'][] = "No piece at move {$position['fullmoves']}".($position['active'] ? "w" : "b"); break;
+                } elseif (count($existingPieces)===1) {
+                    $actualPiece = $existingPieces[0];
+                } else { // > 1
+                    $targetingPieces = $this->getTargetingPieces($position['board'], $position['active'], $existingPieces, $destination, $capture, $piece);
+                    if (count($targetingPieces)===0) {
+                        $position['errors'][] = "No movable piece at move {$position['fullmoves']}".($position['active'] ? "w" : "b"); break;
+                    } elseif (count($targetingPieces)===1) {
+                        $actualPiece = $targetingPieces[0];
+                    } else { // > 1
+                        $legalPieces = $this->getLegalPieces($position['board'], $position['active'], $existingPieces, $destination);
+                        if (count($legalPieces)===0) {
+                           $position['errors'][] = "No legally movable piece at move {$position['fullmoves']}".($position['active'] ? "w" : "b"); break;
+                        } elseif (count($legalPieces)===1) {
+                            $actualPiece = $legalPieces[0];
+                        } else {
+                           $position['errors'][] = "Too many legally movable piece at move {$position['fullmoves']}".($position['active'] ? "w" : "b"); break;
+                        }
+                    }
+                }
+                // en passant capture
+                if ($piece=='P' && $capture && $position['board'][$destination[0]][$destination[1]]==null) {
+                    $position['board'][$position['active'] ? 2 : 5][$destination[1]] == null;
+                }
+                // update variables
+                if ($piece=='K' && $actualPiece==[ $position['active'] ? 7 : 0, 4 ]) {
+                    unset($position['castling'][$position['active'] ? 'K' : 'k'], $position['castling'][$position['active'] ? 'Q' : 'q'] );
+                } elseif ($piece=='R' && $actualPiece==[ $position['active'] ? 7 : 0, 0 ]) {
+                    unset($position['castling'][$position['active'] ? 'Q' : 'q'] );
+                } elseif ($piece=='R' && $actualPiece==[ $position['active'] ? 7 : 0, 7 ]) {
+                    unset($position['castling'][$position['active'] ? 'K' : 'k']);
+                }
+                if ($piece=='P' && $actualPiece[0]==($position['active'] ? 6 : 1) && $destination[0]==($position['active'] ? 4 : 3)) {
+                    $position['enpassant'] = [ $destination[0]+($position['active'] ? 1 : -1), $destination[1] ];
+                } else {
+                    $position['enpassant'] = [ null, null ];
+                }
+                $position['halfmoves'] = $piece=='P' || $position['board'][$destination[0]][$destination[1]]!==null ? 0 : $position['halfmoves'] + 1;
+                // update board
+                $truePiece = $promotion ? $promotion : $piece;
+                if (!$position['active']) $truePiece = strtolower($truePiece);
+                $position['board'][$actualPiece[0]][$actualPiece[1]] = null;
+                $position['board'][$destination[0]][$destination[1]] = $truePiece;
+            }
+            if ($position['active']) $position['fullmoves'] += 1;
+            $position['active'] = !$position['active'];
+        }
+        $position['active'] = !$position['active']; // invert
+        return $position;
+    }
+
+    // Find pieces in the chessboard
+    private function getExistingPieces($board, $whiteToMove, $piece, $disambiguate = [ null, null ]) {
+        $existingPieces = [];
+        if (!$whiteToMove) $piece = strtolower($piece);
+        for ($i=0; $i<8; $i++) {
+            for ($j=0; $j<8; $j++) {
+                if ($piece===$board[$i][$j] && ($disambiguate[0]===null || $disambiguate[0]===$i) && ($disambiguate[1]===null || $disambiguate[1]===$j))
+                $existingPieces[] = [$i, $j];
+            }
+        }
+        return $existingPieces;
+    }
+
+    // Find pieces which can arrive to a certain target
+    private function getTargetingPieces($board, $whiteToMove, $existingPieces, $destination, $capture = null, $piece = null) {
+        $targetingPieces = [];
+        foreach ($existingPieces as $existingPiece) {
+            if (!$piece) $piece = strtoupper($board[$existingPiece[0]][$existingPiece[1]]);
+            if ($piece=='R' || $piece=='B' || $piece=='Q') {
+                $differences = [];
+                if ($piece=='R' || $piece=='Q') $differences = array_merge($differences, [ [0,1], [1,0], [0,-1], [-1,0] ]);
+                if ($piece=='B' || $piece=='Q') $differences = array_merge($differences, [ [1,1], [1,-1], [-1,-1], [-1,1] ]);
+                foreach ($differences as $difference) {
+                    $actualCell = $existingPiece;
+                    while ($actualCell[0]>=0 && $actualCell[0]<=7 && $actualCell[1]>=0 && $actualCell[1]<=7) {
+                        if ($actualCell!==$existingPiece) { // avoid check on oneself
+                            if ($actualCell==$destination) {
+                                $targetingPieces[] = $existingPiece;
+                                break 2; // continue with the following piece
+                            }
+                            if ($board[$actualCell[0]][$actualCell[1]]!==null) break; // found
+                        }
+                        $actualCell[0] += $difference[0]; // new cell
+                        $actualCell[1] += $difference[1];
+                    }
+                }
+            } elseif ($piece=='N' || $piece=='P' && $capture) {
+                if ($piece=='N') {
+                    $differences = [ [1,2], [2,1], [1,-2], [2,-1], [-1,2], [-2,1], [-1,-2], [-2,-1] ];
+                } else { // pawn
+                    $differences = [ [$whiteToMove ? -1 : 1, 1], [$whiteToMove ? -1 : 1, -1] ];
+                }
+                foreach ($differences as $difference) {
+                    $actualCell[0] = $existingPiece[0]+$difference[0];
+                    $actualCell[1] = $existingPiece[1]+$difference[1];
+                    if ($actualCell==$destination) { // no matter out of range
+                        $targetingPieces[] = $existingPiece;
+                        break; // continue with the following piece
+                    }
+                }
+            } elseif ($piece=='P' && !$capture) {
+                $difference = [ $whiteToMove ? -1 : 1, 0 ];
+                $firstPosition = $whiteToMove && $existingPiece[0]==6 || !$whiteToMove && $existingPiece[0]==1;
+                $actualCell = $existingPiece;
+                while ($actualCell[0]>=0 && $actualCell[0]<=7 && abs($actualCell[0]-$existingPiece[0])<=($firstPosition ? 2 : 1)) {
+                    if ($actualCell!==$existingPiece) { // do not check oneself
+                        if ($actualCell==$destination) {
+                            $targetingPieces[] = $existingPiece;
+                            break 2; // continue with the following piece
+                        }
+                        if ($board[$actualCell[0]][$actualCell[1]]!==null) break; // found
+                    }
+                    $actualCell[0] += $difference[0]; // new cell
+                    $actualCell[1] += $difference[1]; // superfluous
+                }
+            }
+        }
+        return $targetingPieces;
+    }
+
+    // Find pieces which can arrive to a certain target without uncovering the king
+    private function getLegalPieces($board, $whiteToMove, $existingPieces, $destination) {
+        $legalPieces = [];
+        $possibleAttackers = [];
+        foreach ($whiteToMove ? ['q', 'r', 'b'] : ['Q', 'R', 'B'] as $attacker) {
+            $possibleAttackers = array_merge($possibleAttackers, $this->getExistingPieces($board, $attacker));
+        }
+        $targetKing = $this->getExistingPieces($board, $whiteToMove ? 'K' : 'k')[0];
+        foreach ($existingPieces as $existingPiece) {
+            $tentativeBoard = $board;
+            $pieceToMove = $tentativeBoard[$existingPiece[0]][$existingPiece[1]]; // any piece is good
+            $tentativeBoard[$existingPiece[0]][$existingPiece[1]] = null;
+            $tentativeBoard[$destination[0]][$destination[1]] = $pieceToMove;
+            if (count($this->getTargetingPieces($tentativeBoard, !$whiteToMove, $possibleAttackers, $targetKing))==0) {
+                $legalPieces[] = $existingPiece;
+            }
+        }
+        return $legalPieces;
+    }
+
+    // Decode PGN file
+    private function getGameFromPgn($fileName) {
+        $lines = file($fileName);
+	if ($lines!==false) {
+            $game = [];
+            $areTags = true;
+            foreach ($lines as $line) {
+                if ($areTags && preg_match('/^\s*\[\s*([A-Z][0-9A-Za-z_]*)\s*"(.*?)"\s*\]\s*$/', $line, $matches)) {
+                    $game[strtolower($matches[1])] = $matches[2];
+                } elseif (preg_match('/^\s*$/', $line)) {
+                    if ($areTags) {
+                        $areTags = false;
+                        $game['moves'] = [];
+                    } else {
+                        break;
+                    }
+                } elseif ($line[0]=='%') {
+                    continue;
+                } else {
+                    $game['moves'] = array_merge($game['moves'], preg_split('/\s+/', trim(preg_replace('/\d+\./', '', $line))));
+                }
+            }
+            return $game;
+        } else {
+            return false;
+        }
+    }
+
+    // Calculate ply
+    private function getPlyFromMove($moveNumber) {
+        if ($moveNumber==="begin" || $moveNumber==="end") {
+            return $moveNumber;
+        } elseif (preg_match('/^(\d+)([b|w])$/', $moveNumber, $matches)) {
+            return $matches[1]*2+($matches[2]==="w" ? -2 : -1);
+        }
+    }
+
+    // Write list of moves
+    private function outputMoves($game, $from, $to) {
+        $output = null;
+        if ($from==="begin") {
+            $tags = array_diff(array_keys($game), ['moves']);
+            $translate = array_combine(array_map(function($tag) { return "@$tag"; }, $tags ), array_map(function($tag) use ($game) { return htmlspecialchars($game[$tag]); }, $tags));
+            // Formatted fields
+            $translate['@whitef'] = implode(", ", array_map(function($name) { $parts = explode(",", $name, 2); return $parts[1]." ".$parts[0]; }, explode(":", $translate['@white'])));
+            $translate['@blackf'] = implode(", ", array_map(function($name) { $parts = explode(",", $name, 2); return $parts[1]." ".$parts[0]; }, explode(":", $translate['@black'])));
+            $translate['@datef'] = strpos($translate['@date'], "?") ? "?" : $this->yellow->language->getDateFormatted(strtotime(str_replace(".", "-", $translate['@date'])), $this->yellow->language->getText("coreDateFormatMedium"));
+            $translate['@resultf'] = str_replace("1/2", "½", $translate['@result']);
+            $header = strtr($this->yellow->language->getText("chessHeader"), $translate);
+            $output .= "<header class=\"chess-header\">".$header."</header>\n";
+        }
+
+        $style = $width = $this->yellow->system->get("chessMoveStyle");
+        if ($style!=="standard") {
+            if ($style==="figurines") {
+                  $extensionLocation = $this->yellow->system->get("coreServerBase").$this->yellow->system->get("coreExtensionLocation");
+                $pieceNames = preg_split('/\s*,\s*/', $this->yellow->language->getText("chessPieces"));
+                $target = [];
+                foreach ([0, 1] as $color) {
+                    $target[$color] = array_map(function($k, $v) use ($pieceNames, $color, $extensionLocation) { return "<img class=\"chess-figurine\" src=\"{$extensionLocation}chess-figurines/".$v."-".$color.".svg\" alt=\"".$pieceNames[$k]."\" title=\"".$pieceNames[$k]."\" />"; }, range(0,5), str_split('kqrbnp'));
+                }
+            } elseif ($style=="letters") {
+                $target[0] = $target[1] = preg_split('/\s*,\s*/', $this->yellow->language->getText("chessPiecesInitial"));
+            }
+            foreach ([0, 1] as $color) {
+                $translate[$color] = array_combine(str_split('KQRBNP'), $target[$color]);
+            }
+        }
+        $moves = $game['moves'];
+        $addResult = false;
+        $from = $from==="begin" ? 0 : ($from==="end" ? count($moves)-1 : $from);
+        $to = $to==="begin" ? -1 : ($to==="end" ? count($moves)-1 : $to);
+        $to = min($to, count($moves)-1);
+        $output .= "<p class=\"chess-moves\">";
+        if ($to==count($moves)-1) {
+            $to -= 1;
+            $addResult = true;
+        }
+        if ($from % 2 ==1) $output .= (($from+1)/2)."...";
+        for ($i=$from; $i<=$to; $i++) {
+            if ($style==="figurines") $output .= "<span class=\"chess-move\">";
+            if ($i%2==0) $output .= ($i/2+1).".";
+            $move = str_replace("x", "×", $moves[$i]);
+            $output .= ($style==="standard" ? $move : strtr($move, $translate[$i%2==1]));
+            if ($style==="figurines") $output .= "</span>";
+            $output .= " ";
+        }
+        if ($addResult) $output .= str_replace("1/2", "½", $game['result']);
+        $output .= "</p>\n";
+        return $output;
+    }
+
+    // Encode FEN
+    private function getFenFromPosition($position) {
+        $lines = [];
+        foreach ($position['board'] as $row) {
+            $line = "";
+            foreach ($row as $cell) {
+                $line .= $cell===null ? '1' : $cell;
+            }
+            $line = preg_replace_callback('/1+/', function($m) { return (string)strlen($m[0]); }, $line);
+            $lines[] = $line;
+        }
+        $fen = implode(" ", [
+            implode('/', $lines),
+            $position['active'] ? "b" : "w", // inverted
+            $position['castling']==[] ? '-' : implode('', array_keys($position['castling'])),
+            $position['enpassant']==[ null, null ] ? '-' : "abcdefgh"[(int)$position['enpassant'][1]].(8-$position['enpassant'][0]),
+            $position['halfmoves'],
+            $position['fullmoves']-1
+        ]);
+        return $fen;
+    }
+
+    // Handle page extra data
+    public function onParsePageExtra($page, $name) {
+        $output = null;
+        if ($name=="header") {
+            $extensionLocation = $this->yellow->system->get("coreServerBase").$this->yellow->system->get("coreExtensionLocation");
+            $output .= "<link rel=\"stylesheet\" type=\"text/css\" media=\"all\" href=\"{$extensionLocation}chess.css\" />\n";
+        }
+        return $output;
     }
 }
