@@ -112,7 +112,6 @@ class YellowChess {
         return $output;
     }
 
-    // Decode FEN
     private function getPositionFromFen($fen) {
         $parts = explode(" ", $fen);
         $position = [];
@@ -359,17 +358,17 @@ class YellowChess {
                 $disambiguate = [ $numToNum[$matches[3]], $letToNum[$matches[2]] ];
                 $capture = $matches[4];
                 $destination = [ $numToNum[$matches[6]], $letToNum[$matches[5]] ];
-                $check = empty($matches[7]) ? "" : $matches[7];
-            } elseif (preg_match('/^(?:([a-h])(x))?([a-h])([1-8])(?:=([RNBQ]))?([+#])?$/', $move, $matches)) {
+                //$check = empty($matches[7]) ? "" : $matches[7];
+            } elseif (preg_match('/^(?:([a-h])(x))?([a-h])([1-8])(?:(=)([RNBQ]))?([+#])?$/', $move, $matches)) {
                 $piece = 'P';
                 $disambiguate = [ null, $letToNum[$matches[1]] ];
                 $capture = $matches[2];
                 $destination = [ $numToNum[$matches[4]], $letToNum[$matches[3]] ];
-                $promotion = empty($matches[5]) ? "" : $matches[5];
-                $check = empty($matches[6]) ? "" : $matches[6];
+                $promotion = empty($matches[6]) ? "" : $matches[6];
+                //$check = empty($matches[7]) ? "" : $matches[7];
             } elseif (preg_match('/^O-O(-O)?([+#])?$/', $move, $matches)) {
                 $castling = empty($matches[1]) ? 'K' : 'Q';
-                $check = empty($matches[2]) ? "" : $matches[2];
+                //$check = empty($matches[2]) ? "" : $matches[2];
             }
 
             // executions of moves
@@ -569,31 +568,15 @@ class YellowChess {
         $output = null;
         if ($from==="begin") {
             $tags = array_diff(array_keys($game), ['moves']);
-            $translate = array_combine(array_map(function($tag) { return "@$tag"; }, $tags ), array_map(function($tag) use ($game) { return htmlspecialchars($game[$tag]); }, $tags));
+            $interpolations = array_combine(array_map(function($tag) { return "@$tag"; }, $tags ), array_map(function($tag) use ($game) { return htmlspecialchars($game[$tag]); }, $tags));
             // Formatted fields
-            $translate['@whitef'] = implode(", ", array_map(function($name) { $parts = explode(",", $name, 2); return $parts[1]." ".$parts[0]; }, explode(":", $translate['@white'])));
-            $translate['@blackf'] = implode(", ", array_map(function($name) { $parts = explode(",", $name, 2); return $parts[1]." ".$parts[0]; }, explode(":", $translate['@black'])));
-            $translate['@datef'] = strpos($translate['@date'], "?") ? "?" : $this->yellow->language->getDateFormatted(strtotime(str_replace(".", "-", $translate['@date'])), $this->yellow->language->getText("coreDateFormatMedium"));
-            $translate['@resultf'] = str_replace("1/2", "½", $translate['@result']);
-            $header = strtr($this->yellow->language->getText("chessHeader"), $translate);
+            foreach (['white', 'black'] as $color) {
+                $interpolations["@{$color}f"] = implode(", ", array_map(function($name) use ($color) { $parts = explode(",", $name, 2); return isset($parts[1]) ? $parts[1]." ".$parts[0] : $parts[0]; }, explode(":", $interpolations["@{$color}"])));
+            }
+            $interpolations['@datef'] = strpos($interpolations['@date'], "?") ? "?" : $this->yellow->language->getDateFormatted(strtotime(str_replace(".", "-", $interpolations['@date'])), $this->yellow->language->getText("coreDateFormatMedium"));
+            $interpolations['@resultf'] = str_replace("1/2", "½", $interpolations['@result']);
+            $header = strtr($this->yellow->language->getText("chessHeader"), $interpolations);
             $output .= "<header class=\"chess-header\">".$header."</header>\n";
-        }
-
-        $style = $width = $this->yellow->system->get("chessMoveStyle");
-        if ($style!=="standard") {
-            if ($style==="figurines") {
-                  $extensionLocation = $this->yellow->system->get("coreServerBase").$this->yellow->system->get("coreExtensionLocation");
-                $pieceNames = preg_split('/\s*,\s*/', $this->yellow->language->getText("chessPieces"));
-                $target = [];
-                foreach ([0, 1] as $color) {
-                    $target[$color] = array_map(function($k, $v) use ($pieceNames, $color, $extensionLocation) { return "<img class=\"chess-figurine\" src=\"{$extensionLocation}chess-figurines/".$v."-".$color.".svg\" alt=\"".$pieceNames[$k]."\" title=\"".$pieceNames[$k]."\" />"; }, range(0,5), str_split('kqrbnp'));
-                }
-            } elseif ($style=="letters") {
-                $target[0] = $target[1] = preg_split('/\s*,\s*/', $this->yellow->language->getText("chessPiecesInitial"));
-            }
-            foreach ([0, 1] as $color) {
-                $translate[$color] = array_combine(str_split('KQRBNP'), $target[$color]);
-            }
         }
         $moves = $game['moves'];
         $addResult = false;
@@ -607,11 +590,8 @@ class YellowChess {
         }
         if ($from % 2 ==1) $output .= (($from+1)/2)."...";
         for ($i=$from; $i<=$to; $i++) {
-            if ($style==="figurines") $output .= "<span class=\"chess-move\">";
             if ($i%2==0) $output .= ($i/2+1).".";
-            $move = str_replace("x", "×", $moves[$i]);
-            $output .= ($style==="standard" ? $move : strtr($move, $translate[$i%2==1]));
-            if ($style==="figurines") $output .= "</span>";
+            $output .= $moves[$i];
             $output .= " ";
         }
         if ($addResult) $output .= str_replace("1/2", "½", $game['result']);
@@ -641,6 +621,51 @@ class YellowChess {
         return $fen;
     }
 
+    // Handle page content in HTML format
+    public function onParseContentHtml($page, $text) {
+        $output = null;
+        $style = $this->yellow->system->get("chessMoveStyle");
+        if ($style==="figurines" || $style==="letters" && $this->yellow->system->get("language")!=="en") {
+            $translate = $this->setupTranslate();
+            $patterns = [ // regex and index of the match to be translated
+                ['/(\d+\.|\d\.\.\.|\s)([RNBQK])([a-h])?([1-8])?(x)?([a-h])([1-8])([+#])?\b/', 2],
+                ['/(\d+\.|\d\.\.\.|\s)(?:([a-h])(x))?([a-h])([1-8])(?:(=)([RNBQ]))?([+#])?\b/', 7],
+            ];
+            $output = preg_replace_callback('/>([^<]+)</', function($matches) use ($patterns, $translate) {
+                $translated = $matches[1];
+                foreach ([0, 1] as $patternType) {
+                    $translated = preg_replace_callback($patterns[$patternType][0], function($m) use ($translate, $patterns, $patternType) {
+                        $color = !preg_match('/^\d+\.$/', $m[1]);
+                        if (isset($m[$patterns[$patternType][1]])) $m[$patterns[$patternType][1]] = $translate[$color][$m[$patterns[$patternType][1]]];
+                        return "<span class=\"chess-move\">".implode('', array_slice($m, 1))."</span>";
+                    }, $translated);
+                }
+                return ">".$translated."<";
+            }, $text);
+        }
+        return $output;
+    }
+
+    // Build translation table
+    private function setupTranslate() {
+        $translate = null;
+        $style = $this->yellow->system->get("chessMoveStyle");
+        if ($style==="figurines") {
+              $extensionLocation = $this->yellow->system->get("coreServerBase").$this->yellow->system->get("coreExtensionLocation");
+            $pieceNames = preg_split('/\s*,\s*/', $this->yellow->language->getText("chessPieces"));
+            $target = [];
+            foreach ([0, 1] as $color) {
+                $target[$color] = array_map(function($k, $v) use ($pieceNames, $color, $extensionLocation) { return "<img class=\"chess-figurine\" src=\"{$extensionLocation}chess-figurines/".$v."-".$color.".svg\" alt=\"".$pieceNames[$k]."\" title=\"".$pieceNames[$k]."\" />"; }, range(0,5), str_split('kqrbnp'));
+            }
+        } elseif ($style=="letters") {
+            $target[0] = $target[1] = preg_split('/\s*,\s*/', $this->yellow->language->getText("chessPiecesInitial"));
+        }
+        foreach ([0, 1] as $color) {
+            $translate[$color] = array_combine(str_split('KQRBNP'), $target[$color]);
+        }
+        return $translate;
+    }
+
     // Handle page extra data
     public function onParsePageExtra($page, $name) {
         $output = null;
@@ -650,4 +675,5 @@ class YellowChess {
         }
         return $output;
     }
+
 }

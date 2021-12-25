@@ -18,6 +18,10 @@ The following arguments are available, all but the first argument are optional:
 
 [Portable Game Notation](http://www.saremba.de/chessgml/standards/pgn/pgn-complete.htm) is the standard way of describing chess games. If the file contains more games, the first is picked. You can add after the file name two additional fields: the first specifies a move or interval of moves, e.g. `begin-5w`, `5b-12w`, `15w-end` (`begin` means the initial position, `end` the final result of the game); the second specifies the output desired, i.e `diagram` of the position after the last move specified, list of `moves`, or `all`. With `begin`, `moves` outputs the heading of the game. Default values are `begin-end all`.
 
+## How to add comments to a game
+
+You can break a game in different sections specifying an interval of moves in the `Source` argument. After each section you can add comments. Write the moves in the Standard Algebraic Notation and they will automatically translated (figurines or localised abbreviations).
+
 ## Examples
 
 Showing a chess diagram:
@@ -59,6 +63,21 @@ Showing a chess diagram from a game, different sizes with the default style:
 
     [chess "caruana_ponomariov_2014.pgn 12w diagram" - 50%]
     [chess "caruana_ponomariov_2014.pgn 12w diagram" - 200]
+
+Adding comments:
+
+    [chess "byrne_fischer_1956.pgn begin-4b"]
+    
+    Fischer castles, bringing his king to safety. The Black move 4...d5 
+    would have reached the Grünfeld Defence immediately. After Fischer's 
+    4...O-O, Byrne could have played 5.e4, whereupon 5...d6 6.Be2 e5 
+    reaches the main line of the King's Indian Defense.
+    
+    [chess "byrne_fischer_1956.pgn 5w-6w"]
+    
+    A form of the so-called Russian System (the usual move order is 1.d4 
+    Nf6 2.c4 g6 3.Nc3 d5 4.Nf3 Bg7 5.Qb3), putting pressure on Fischer's 
+    central d5-pawn.
 
 ## Settings
 
