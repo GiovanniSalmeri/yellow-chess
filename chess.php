@@ -633,10 +633,10 @@ class YellowChess {
             ];
             $output = preg_replace_callback('/>([^<]+)</', function($matches) use ($patterns, $translate) {
                 $translated = $matches[1];
-                foreach ([0, 1] as $patternType) {
-                    $translated = preg_replace_callback($patterns[$patternType][0], function($m) use ($translate, $patterns, $patternType) {
+                foreach ($patterns as $pattern) {
+                    $translated = preg_replace_callback($pattern[0], function($m) use ($translate, $pattern) {
                         $color = !preg_match('/^\d+\.$/', $m[1]);
-                        if (isset($m[$patterns[$patternType][1]])) $m[$patterns[$patternType][1]] = $translate[$color][$m[$patterns[$patternType][1]]];
+                        if (isset($m[$pattern[1]])) $m[$pattern[1]] = $translate[$color][$m[$pattern[1]]];
                         return "<span class=\"chess-move\">".implode('', array_slice($m, 1))."</span>";
                     }, $translated);
                 }
