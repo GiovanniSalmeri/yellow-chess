@@ -407,7 +407,7 @@ class YellowChess {
                 }
                 // en passant capture
                 if ($piece=='P' && $capture && $position['board'][$destination[0]][$destination[1]]==null) {
-                    $position['board'][$position['active'] ? 2 : 5][$destination[1]] == null;
+                    $position['board'][$position['active'] ? 2 : 5][$destination[1]]==null;
                 }
                 // update variables
                 if ($piece=='K' && $actualPiece==[ $position['active'] ? 7 : 0, 4 ]) {
@@ -588,7 +588,7 @@ class YellowChess {
             $to -= 1;
             $addResult = true;
         }
-        if ($from % 2 ==1) $output .= (($from+1)/2)."...";
+        if ($from%2==1) $output .= (($from+1)/2)."...";
         for ($i=$from; $i<=$to; $i++) {
             if ($i%2==0) $output .= ($i/2+1).".";
             $output .= $moves[$i];
@@ -651,7 +651,7 @@ class YellowChess {
         $translations = null;
         $style = $this->yellow->system->get("chessMoveStyle");
         if ($style==="figurines") {
-              $extensionLocation = $this->yellow->system->get("coreServerBase").$this->yellow->system->get("coreExtensionLocation");
+            $extensionLocation = $this->yellow->system->get("coreServerBase").$this->yellow->system->get("coreExtensionLocation");
             $pieceNames = preg_split('/\s*,\s*/', $this->yellow->language->getText("chessPieces"));
             $target = [];
             foreach ([0, 1] as $color) {
