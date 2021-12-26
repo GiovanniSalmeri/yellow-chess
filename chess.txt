@@ -7,6 +7,7 @@ ChessPieces: king,queen,rock,bishop,knight,pawn
 ChessPiecesPlural: kings,queens,rocks,bishops,knights,pawns
 ChessPiecesInitial: K,Q,R,B,N,P
 ChessToMove: @color to move
+ChessComment: Comment
 
 Language: de
 ChessHeader: <b>@whitef gegen @blackf</b> (@event, @round, @site @datef): <b>@resultf</b>
@@ -15,6 +16,7 @@ ChessPieces: König,Dame,Turm,Läufer,Springer,Bauer
 ChessPiecesPlural: Könige,Damen,Türme,Läufer,Springer,Bauern
 ChessPiecesInitial: K,D,T,L,S,B
 ChessToMove: @color am Zug
+ChessComment: Kommentar
 
 Language: fr
 ChessHeader: <b>@whitef contre @blackf</b> (@event, @round, @site @datef): <b>@resultf</b>
@@ -23,6 +25,7 @@ ChessPieces: roi,dame,tour,fou,cavalier,pion
 ChessPiecesPlural: rois,dames,tours,fous,cavaliers,pions
 ChessPiecesInitial: R,D,T,F,C,P
 ChessToMove: Trait aux @colors
+ChessComment: Commentaire
 
 Language: it
 ChessHeader: <b>@whitef contro @blackf</b> (@event, @round, @site @datef): <b>@resultf</b>
@@ -31,6 +34,7 @@ ChessPieces: re,donna,torre,alfiere,cavallo,pedone
 ChessPiecesPlural: re,donne,torri,alfieri,cavalli,pedoni
 ChessPiecesInitial: R,D,T,A,C,P
 ChessToMove: Muove il @color
+ChessComment: Commento
 
 Language: es
 ChessHeader: <b>@whitef contra @blackf</b> (@event, @round, @site @datef): <b>@resultf</b>
@@ -39,6 +43,7 @@ ChessPieces: rey,dama,torre,alfil,caballo,peón
 ChessPiecesPlural: reyes,damas,torres,alfiles,caballos,peones
 ChessPiecesInitial: R,D,T,A,C,P
 ChessToMove: Mueve el @color
+ChessComment: Comentario
 
 Language: pt
 ChessHeader: <b>@whitef contra @blackf</b> (@event, @round, @site @datef): <b>@resultf</b>
@@ -47,6 +52,7 @@ ChessPieces: rei,dama,torre,bispo,cavalo,peão
 ChessPiecesPlural: reis,damas,torres,bispos,cavalos,peões
 ChessPiecesInitial: R,D,T,B,C,P
 ChessToMove: @color para mover
+ChessComment: Comentário
 
 Language: nl
 ChessHeader: <b>@whitef tegen @blackf</b> (@event, @round, @site @datef): <b>@resultf</b>
@@ -55,3 +61,4 @@ ChessPieces: koning,dame,toren,loper,paard,pion
 ChessPiecesPlural: koningen,dames,torens,lopers,paarden,pionnen
 ChessPiecesInitial: K,D,T,L,P,O
 ChessToMove: @color aan zet
+ChessComment: Commentaar

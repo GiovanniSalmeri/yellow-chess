@@ -22,6 +22,8 @@ The following arguments are available, all but the first argument are optional:
 
 You can break a game in different sections specifying an interval of moves in the `Source` argument. After each section you can add comments. Write the moves in the Standard Algebraic Notation and they will automatically translated (figurines or localised abbreviations).
 
+You can also add comments in the PGN file, enclosed in `{}`.
+
 ## Examples
 
 Showing a chess diagram:

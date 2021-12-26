@@ -6,9 +6,13 @@
     margin-bottom: 1em;
 }
 .content p.chess-moves {
-    /* Put in bold if you have to distinguish from hypothetical moves mentioned in the commentary */
-     /*font-weight: bold; */
+    /* Put in bold if you wish to distinguish better from moves mentioned in the commentary */
+    /* font-weight: bold; */
 }
 .content span.chess-move {
     white-space: nowrap;
+}
+.content span.chess-comment {
+    font-weight: normal;
+    color: red;
 }

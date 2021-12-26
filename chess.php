@@ -530,6 +530,7 @@ class YellowChess {
     private function getGameFromPgn($fileName) {
         $lines = file($fileName);
 	if ($lines!==false) {
+            $moveText = "";
             $game = [];
             $areTags = true;
             foreach ($lines as $line) {
@@ -538,15 +539,19 @@ class YellowChess {
                 } elseif (preg_match('/^\s*$/', $line)) {
                     if ($areTags) {
                         $areTags = false;
-                        $game['moves'] = [];
+                        $game['moves'] = $game['comments'] = [];
                     } else {
                         break;
                     }
                 } elseif ($line[0]=='%') {
                     continue;
                 } else {
-                    $game['moves'] = array_merge($game['moves'], preg_split('/\s+/', trim(preg_replace('/\d+\./', '', $line))));
+                    $moveText .= $line." ";
                 }
+            }
+            if (preg_match_all('/(?:\{\s*(.*?)\s*\})?\s*(?:\d+(?:\.\.\.|\.)\s*)?([^\s{\.]+)/', $moveText, $matches)) {
+                $game['moves'] = $matches[2];
+                $game['comments'] = $matches[1];
             }
             return $game;
         } else {
@@ -567,7 +572,7 @@ class YellowChess {
     private function outputMoves($game, $from, $to) {
         $output = null;
         if ($from==="begin") {
-            $tags = array_diff(array_keys($game), ['moves']);
+            $tags = array_diff(array_keys($game), ['moves', 'comments']);
             $interpolations = array_combine(array_map(function($tag) { return "@$tag"; }, $tags ), array_map(function($tag) use ($game) { return htmlspecialchars($game[$tag]); }, $tags));
             // Formatted fields
             foreach (['white', 'black'] as $color) {
@@ -579,11 +584,15 @@ class YellowChess {
             $output .= "<header class=\"chess-header\">".$header."</header>\n";
         }
         $moves = $game['moves'];
+        $comments = $game['comments'];
         $addResult = false;
+        $output .= "<p class=\"chess-moves\">";
+        $commentLabel = $this->yellow->language->getText("chessCommentLabel");
+        $commentFormat = "<span class=\"chess-comment\" role=\"note\" aria-label=\"{$commentLabel}\">[%s]</span> ";
+        if ($from==="begin" && !empty($comments[0])) $output .= sprintf($commentFormat, htmlspecialchars($comments[0]));
         $from = $from==="begin" ? 0 : ($from==="end" ? count($moves)-1 : $from);
         $to = $to==="begin" ? -1 : ($to==="end" ? count($moves)-1 : $to);
         $to = min($to, count($moves)-1);
-        $output .= "<p class=\"chess-moves\">";
         if ($to==count($moves)-1) {
             $to -= 1;
             $addResult = true;
@@ -591,8 +600,8 @@ class YellowChess {
         if ($from%2==1) $output .= (($from+1)/2)."...";
         for ($i=$from; $i<=$to; $i++) {
             if ($i%2==0) $output .= ($i/2+1).".";
-            $output .= $moves[$i];
-            $output .= " ";
+            $output .= $moves[$i]." ";
+            if (!empty($comments[$i+1])) $output .= sprintf($commentFormat, htmlspecialchars($comments[$i+1]));
         }
         if ($addResult) $output .= str_replace("1/2", "½", $game['result']);
         $output .= "</p>\n";
@@ -647,7 +656,7 @@ class YellowChess {
     }
 
     // Build translation table
-    private function getTranslations() { // OK
+    private function getTranslations() {
         $translations = null;
         $style = $this->yellow->system->get("chessMoveStyle");
         if ($style==="figurines") {
