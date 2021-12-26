@@ -626,17 +626,17 @@ class YellowChess {
         $output = null;
         $style = $this->yellow->system->get("chessMoveStyle");
         if ($style==="figurines" || $style==="letters" && $this->yellow->system->get("language")!=="en") {
-            $translate = $this->setupTranslate();
+            $translations = $this->getTranslations();
             $patterns = [ // regex and index of the match to be translated
                 ['/(\d+\.|\d\.\.\.|\s)([RNBQK])([a-h])?([1-8])?(x)?([a-h])([1-8])([+#])?\b/', 2],
                 ['/(\d+\.|\d\.\.\.|\s)(?:([a-h])(x))?([a-h])([1-8])(?:(=)([RNBQ]))?([+#])?\b/', 7],
             ];
-            $output = preg_replace_callback('/>([^<]+)</', function($matches) use ($patterns, $translate) {
+            $output = preg_replace_callback('/>([^<]+)</', function($matches) use ($patterns, $translations) {
                 $translated = $matches[1];
                 foreach ($patterns as $pattern) {
-                    $translated = preg_replace_callback($pattern[0], function($m) use ($translate, $pattern) {
+                    $translated = preg_replace_callback($pattern[0], function($m) use ($translations, $pattern) {
                         $color = !preg_match('/^\d+\.$/', $m[1]);
-                        if (isset($m[$pattern[1]])) $m[$pattern[1]] = $translate[$color][$m[$pattern[1]]];
+                        if (isset($m[$pattern[1]])) $m[$pattern[1]] = $translations[$color][$m[$pattern[1]]];
                         return "<span class=\"chess-move\">".implode('', array_slice($m, 1))."</span>";
                     }, $translated);
                 }
@@ -647,8 +647,8 @@ class YellowChess {
     }
 
     // Build translation table
-    private function setupTranslate() {
-        $translate = null;
+    private function getTranslations() { // OK
+        $translations = null;
         $style = $this->yellow->system->get("chessMoveStyle");
         if ($style==="figurines") {
               $extensionLocation = $this->yellow->system->get("coreServerBase").$this->yellow->system->get("coreExtensionLocation");
@@ -661,9 +661,9 @@ class YellowChess {
             $target[0] = $target[1] = preg_split('/\s*,\s*/', $this->yellow->language->getText("chessPiecesInitial"));
         }
         foreach ([0, 1] as $color) {
-            $translate[$color] = array_combine(str_split('KQRBNP'), $target[$color]);
+            $translations[$color] = array_combine(str_split('KQRBNP'), $target[$color]);
         }
-        return $translate;
+        return $translations;
     }
 
     // Handle page extra data
