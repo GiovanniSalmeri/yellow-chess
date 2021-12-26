@@ -634,7 +634,7 @@ class YellowChess {
     public function onParseContentHtml($page, $text) {
         $output = null;
         $style = $this->yellow->system->get("chessMoveStyle");
-        if ($style==="figurines" || $style==="letters" && $this->yellow->system->get("language")!=="en") {
+        if ($style==="figurines" || $style==="letters" && $page->get("language")!=="en") {
             $translations = $this->getTranslations();
             $patterns = [ // regex and index of the match to be translated
                 ['/(\d+\.|\d\.\.\.|\s)([RNBQK])([a-h])?([1-8])?(x)?([a-h])([1-8])([+#])?\b/', 2],
