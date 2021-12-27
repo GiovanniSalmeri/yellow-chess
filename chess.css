@@ -7,7 +7,7 @@
 }
 .content p.chess-moves {
     /* Put in bold if you wish to distinguish better from moves mentioned in the commentary */
-    /* font-weight: bold; */
+     /*font-weight: bold; */
 }
 .content span.chess-move {
     white-space: nowrap;
@@ -15,4 +15,8 @@
 .content span.chess-comment {
     font-weight: normal;
     color: #4682b4;
+}
+.content span.chess-comment img {
+    /* see https://codepen.io/sosuke/pen/Pjoqqp */
+    filter: invert(42%) sepia(92%) saturate(310%) hue-rotate(164deg) brightness(94%) contrast(87%)
 }
