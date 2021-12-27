@@ -353,20 +353,20 @@ class YellowChess {
         foreach (array_slice($moves, 0, $plyNumber) as $move) {
             $piece = $capture = $promotion = $check = $castling = null;
             $disambiguate = $destination = [ null, null ];
-            if (preg_match('/^([RNBQK])([a-h])?([1-8])?(x)?([a-h])([1-8])([+#])?$/', $move, $matches)) {
+            if (preg_match('/^([RNBQK])([a-h])?([1-8])?(x)?([a-h])([1-8])([+#])?([!?]{1,2})?$/', $move, $matches)) {
                 $piece = $matches[1];
                 $disambiguate = [ $numToNum[$matches[3]], $letToNum[$matches[2]] ];
                 $capture = $matches[4];
                 $destination = [ $numToNum[$matches[6]], $letToNum[$matches[5]] ];
                 //$check = empty($matches[7]) ? "" : $matches[7];
-            } elseif (preg_match('/^(?:([a-h])(x))?([a-h])([1-8])(?:(=)([RNBQ]))?([+#])?$/', $move, $matches)) {
+            } elseif (preg_match('/^(?:([a-h])(x))?([a-h])([1-8])(?:(=)([RNBQ]))?([+#])?([!?]{1,2})?$/', $move, $matches)) {
                 $piece = 'P';
                 $disambiguate = [ null, $letToNum[$matches[1]] ];
                 $capture = $matches[2];
                 $destination = [ $numToNum[$matches[4]], $letToNum[$matches[3]] ];
                 $promotion = empty($matches[6]) ? "" : $matches[6];
                 //$check = empty($matches[7]) ? "" : $matches[7];
-            } elseif (preg_match('/^O-O(-O)?([+#])?$/', $move, $matches)) {
+            } elseif (preg_match('/^O-O(-O)?([+#])?([!?]{1,2})?$/', $move, $matches)) {
                 $castling = empty($matches[1]) ? 'K' : 'Q';
                 //$check = empty($matches[2]) ? "" : $matches[2];
             }
@@ -638,8 +638,8 @@ class YellowChess {
         if ($style==="figurines" || $style==="letters" && $page->get("language")!=="en") {
             $translations = $this->getTranslations();
             $patterns = [ // regex and index of the match to be translated
-                ['/(\d+\.|\d\.\.\.|\s)([RNBQK])([a-h])?([1-8])?(x)?([a-h])([1-8])([+#])?\b/', 2],
-                ['/(\d+\.|\d\.\.\.|\s)(?:([a-h])(x))?([a-h])([1-8])(?:(=)([RNBQ]))?([+#])?\b/', 7],
+                ['/(\d+\.|\d\.\.\.|\s)([RNBQK])([a-h])?([1-8])?(x)?([a-h])([1-8])([+#])?([!?]{1,2})?\b/', 2],
+                ['/(\d+\.|\d\.\.\.|\s)(?:([a-h])(x))?([a-h])([1-8])(?:(=)([RNBQ]))?([+#])?([!?]{1,2})?\b/', 7],
             ];
             $output = preg_replace_callback('/>([^<]+)</', function($matches) use ($patterns, $translations) {
                 $translated = $matches[1];
