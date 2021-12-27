@@ -549,6 +549,7 @@ class YellowChess {
                     $moveText .= $line." ";
                 }
             }
+            $moveText = preg_replace('/\}\s*{/', " ", $moveText);
             if (preg_match_all('/(?:\{\s*(.*?)\s*\})?\s*(?:\d+(?:\.\.\.|\.)\s*)?([^\s{\.]+)/', $moveText, $matches)) {
                 $game['moves'] = $matches[2];
                 $game['comments'] = $matches[1];
