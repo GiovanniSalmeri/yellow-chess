@@ -1,0 +1,16 @@
+svg.chess text.coord {
+    font-size: 11px;
+    font-family: sans-serif; 
+}
+svg.chess g#board rect {
+    fill: #E5E4E2; /* platinum */
+    /* fill: ##B58863; */ /* lightSalmon3 */
+    /* fill: #D18B47; */ /* peru */
+    /* fill: #C2DFFF; */ /* sea blue */
+    /* fill: #B5A642; */ /* brass */
+}
+svg.chess g#board rect.light {
+    fill: #ffffff; /* white */
+    /* fill: #F0D9B5; */ /* bisque2 */
+    /* fill: #FFCE9E; */ /* burlywood1 */
+}
