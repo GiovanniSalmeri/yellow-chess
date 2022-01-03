@@ -4,7 +4,7 @@ svg.chess text.coord {
 }
 svg.chess g#board rect {
     fill: #E5E4E2; /* platinum */
-    /* fill: ##B58863; */ /* lightSalmon3 */
+    /* fill: #B58863; */ /* lightSalmon3 */
     /* fill: #D18B47; */ /* peru */
     /* fill: #C2DFFF; */ /* sea blue */
     /* fill: #B5A642; */ /* brass */
