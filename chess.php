@@ -182,7 +182,7 @@ class YellowChess {
     private function drawBoardFromPosition($position) {
         $extensionDirectory = $this->yellow->system->get("coreExtensionDirectory");
         $cssContent = @file_get_contents("{$extensionDirectory}chess-board.css");
-        $cssContent = preg_replace('/\/\*.*?\*\//', '', $cssContent);
+        $cssContent = preg_replace([ '/\/\*.*?\*\//', '/\s+/' ], ['', ' '], $cssContent);
         $svgBoard = '<svg class="chess" viewBox="39 39 403 403" version="1.1" xmlns="http://www.w3.org/2000/svg">
 <style>'.$cssContent.'</style>
 <desc>SVG Chess Board</desc>
