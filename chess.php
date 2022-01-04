@@ -184,7 +184,7 @@ class YellowChess {
         $cssContent = @file_get_contents("{$extensionDirectory}chess-board.css");
         $cssContent = preg_replace([ '/\/\*.*?\*\//', '/\s+/' ], ['', ' '], $cssContent);
         $svgBoard = '<svg class="chess" viewBox="39 39 403 403" version="1.1" xmlns="http://www.w3.org/2000/svg">
-<style>'.$cssContent.'</style>
+<style><![CDATA['.$cssContent.']]></style>
 <desc>SVG Chess Board</desc>
 <defs>
 <desc>This SVG contains wikimedia SVG chess pieces (CC BY-SA 3.0) from https://commons.wikimedia.org/wiki/Category:SVG_chess_pieces</desc>
