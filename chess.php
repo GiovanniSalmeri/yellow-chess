@@ -666,6 +666,7 @@ class YellowChess {
         if ($style==="figurines") {
             $extensionLocation = $this->yellow->system->get("coreServerBase").$this->yellow->system->get("coreExtensionLocation");
             $pieceNames = preg_split('/\s*,\s*/', $this->yellow->language->getText("chessPieces"));
+            if ($pieceNames==["[chessPieces]"]) $pieceNames = array_fill(0, 6, "");
             $target = [];
             foreach ([0, 1] as $color) {
                 $target[$color] = array_map(function($k, $v) use ($pieceNames, $color, $extensionLocation) { return "<img class=\"chess-figurine\" src=\"{$extensionLocation}chess-figurines/".$v."-".$color.".svg\" alt=\"".$pieceNames[$k]."\" title=\"".$pieceNames[$k]."\" />"; }, range(0,5), str_split('kqrbnp'));
