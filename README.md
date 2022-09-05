@@ -2,7 +2,7 @@ Chess 0.8.18
 ============
 Show chess diagrams and games.
 
-<p align="center"><img src="chess-screenshot.png?raw=true" width="795" height="899" alt="Screenshot"></p>
+<p align="center"><img src="chess-screenshot.png?raw=true" alt="Screenshot"></p>
 
 ## How to show a chess diagram or game
 
