@@ -98,4 +98,4 @@ The following settings can be configured in file `system/extensions/yellow-syste
 
 ## Developer
 
-Giovanni Salmeri. [Get help](https://github.com/GiovanniSalmeri/yellow-chess/issues).
+Giovanni Salmeri. [Get help](https://datenstrom.se/yellow/help/)
