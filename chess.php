@@ -94,12 +94,12 @@ class YellowChess {
                         } else {
                             $pieceList = isset($mode) ? $this->getFenFromPosition($position) : $chess;
                         }
-                        if (empty($width)) $width = $this->yellow->system->get("chessWidth");
+                        if (is_string_empty($width)) $width = $this->yellow->system->get("chessWidth");
     	            $svg = $this->drawBoardFromPosition($position);
                         $output .= "<img src=\"data:image/svg+xml;base64,".base64_encode($svg)."\"";
                         $output .= " width=\"".htmlspecialchars($width)."\" height=\"".htmlspecialchars($width)."\"";
                         $output .= " alt=\"".htmlspecialchars($pieceList)."\" title=\"".htmlspecialchars($pieceList)."\"";
-                        if (!empty($style)) $output .= " class=\"".htmlspecialchars($style)."\"";
+                        if (!is_string_empty($style)) $output .= " class=\"".htmlspecialchars($style)."\"";
                         $output .= " />\n";
                     } else {
                         $output .= "<strong>[chess: ".implode(", ", $position['errors'])."]</strong>";
@@ -361,17 +361,17 @@ class YellowChess {
                 $disambiguate = [ $numToNum[$matches[3]], $letToNum[$matches[2]] ];
                 $capture = $matches[4];
                 $destination = [ $numToNum[$matches[6]], $letToNum[$matches[5]] ];
-                //$check = empty($matches[7]) ? "" : $matches[7];
+                //$check = is_string_empty($matches[7]) ? "" : $matches[7];
             } elseif (preg_match('/^(?:([a-h])(x))?([a-h])([1-8])(?:(=)([RNBQ]))?([+#])?([!?]{1,2})?$/', $move, $matches)) {
                 $piece = 'P';
                 $disambiguate = [ null, $letToNum[$matches[1]] ];
                 $capture = $matches[2];
                 $destination = [ $numToNum[$matches[4]], $letToNum[$matches[3]] ];
-                $promotion = empty($matches[6]) ? "" : $matches[6];
-                //$check = empty($matches[7]) ? "" : $matches[7];
+                $promotion = is_string_empty($matches[6]) ? "" : $matches[6];
+                //$check = is_string_empty($matches[7]) ? "" : $matches[7];
             } elseif (preg_match('/^O-O(-O)?([+#])?([!?]{1,2})?$/', $move, $matches)) {
-                $castling = empty($matches[1]) ? 'K' : 'Q';
-                //$check = empty($matches[2]) ? "" : $matches[2];
+                $castling = is_string_empty($matches[1]) ? 'K' : 'Q';
+                //$check = is_string_empty($matches[2]) ? "" : $matches[2];
             }
 
             // executions of moves
@@ -593,7 +593,7 @@ class YellowChess {
         $output .= "<p class=\"chess-moves\">";
         $commentLabel = $this->yellow->language->getText("chessCommentLabel");
         $commentFormat = "<span class=\"chess-comment\" role=\"note\" aria-label=\"{$commentLabel}\">[%s]</span> ";
-        if ($from==="begin" && !empty($comments[0])) $output .= sprintf($commentFormat, htmlspecialchars($comments[0]));
+        if ($from==="begin" && !is_string_empty($comments[0])) $output .= sprintf($commentFormat, htmlspecialchars($comments[0]));
         $from = $from==="begin" ? 0 : ($from==="end" ? count($moves)-1 : $from);
         $to = $to==="begin" ? -1 : ($to==="end" ? count($moves)-1 : $to);
         $to = min($to, count($moves)-1);
@@ -605,7 +605,7 @@ class YellowChess {
         for ($i=$from; $i<=$to; $i++) {
             if ($i%2==0) $output .= ($i/2+1).".";
             $output .= $moves[$i]." ";
-            if (!empty($comments[$i+1])) $output .= sprintf($commentFormat, htmlspecialchars($comments[$i+1]));
+            if (!is_string_empty($comments[$i+1])) $output .= sprintf($commentFormat, htmlspecialchars($comments[$i+1]));
         }
         if ($addResult) $output .= str_replace("1/2", "½", $game['result']);
         $output .= "</p>\n";
