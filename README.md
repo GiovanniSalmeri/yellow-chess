@@ -1,6 +1,6 @@
 Chess 0.8.18
 ============
-Show chess diagrams and games.
+Chess diagrams and games.
 
 <p align="center"><img src="chess-screenshot.png?raw=true" alt="Screenshot"></p>
 
@@ -20,13 +20,13 @@ The following arguments are available, all but the first argument are optional:
 
 The `media/chess` folder is the place to store your board positions and games. You can also create additional folders and organise files as you like.
 
-[Forsyth–Edwards Notation](http://www.saremba.de/chessgml/standards/pgn/pgn-complete.htm#c16.1) is the standard way of describing board positions in chess. In addition to piece placement it allows the indication of active color, castling availability, en passant target square, halfmove clock, fullmove number. You can however here omit any additional field from the right.
+[Forsyth–Edwards Notation](http://www.saremba.de/chessgml/standards/pgn/pgn-complete.htm#c16.1) is the standard way of describing board positions in chess. In addition to piece placement it allows the indication of active color, castling availability, en passant target square, halfmove clock, fullmove number. In the shortcut you can omit any additional field from the right.
 
-[Portable Game Notation](http://www.saremba.de/chessgml/standards/pgn/pgn-complete.htm) is the standard way of describing chess games. If the file contains more games, the first is picked. You can add after the file name two additional fields: the first specifies a move or interval of moves, e.g. `begin-5w`, `5b-12w`, `15w-end` (`begin` means the initial position, `end` the final result of the game); the second specifies the output desired, i.e `diagram` of the position after the last move specified, list of `moves`, or `all`. With `begin`, `moves` outputs the heading of the game. Default values are `begin-end all`.
+[Portable Game Notation](http://www.saremba.de/chessgml/standards/pgn/pgn-complete.htm) is the standard way of describing chess games. Should the file contain more games, the first is picked. You can add after the file name two additional fields: the first specifies a move or interval of moves, e.g. `begin-5w`, `5b-12w`, `15w-end` (`begin` means the initial position, `end` the final result of the game); the second specifies the output: `diagram` of the position after the last move specified, list of `moves`, or `all`. With `begin`, `moves` outputs the heading of the game. Default values are `begin-end all`.
 
 ## How to add comments to a game
 
-You can break a game in different sections specifying an interval of moves in the `Source` argument. After each section you can add comments. Write the moves in the Standard Algebraic Notation and they will automatically translated (figurines or localised abbreviations).
+You can divide a game into several parts by specifying a range of moves in the `Source` argument. After each section you can add comments. Write the moves in the Standard Algebraic Notation and they will automatically translated (figurines or localised abbreviations).
 
 You can also add comments in the PGN file, enclosed in `{}`.
 
