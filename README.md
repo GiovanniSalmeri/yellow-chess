@@ -18,6 +18,8 @@ The following arguments are available, all but the first argument are optional:
 `Style` = diagram style, e.g. `left`, `center`, `right`  
 `Width` = diagram width, pixel or percent  
 
+The `media/chess` folder is the place to store your board positions and games. You can also create additional folders and organise files as you like.
+
 [Forsyth–Edwards Notation](http://www.saremba.de/chessgml/standards/pgn/pgn-complete.htm#c16.1) is the standard way of describing board positions in chess. In addition to piece placement it allows the indication of active color, castling availability, en passant target square, halfmove clock, fullmove number. You can however here omit any additional field from the right.
 
 [Portable Game Notation](http://www.saremba.de/chessgml/standards/pgn/pgn-complete.htm) is the standard way of describing chess games. If the file contains more games, the first is picked. You can add after the file name two additional fields: the first specifies a move or interval of moves, e.g. `begin-5w`, `5b-12w`, `15w-end` (`begin` means the initial position, `end` the final result of the game); the second specifies the output desired, i.e `diagram` of the position after the last move specified, list of `moves`, or `all`. With `begin`, `moves` outputs the heading of the game. Default values are `begin-end all`.
@@ -89,12 +91,12 @@ Adding comments:
 
 The following settings can be configured in file `system/extensions/yellow-system.ini`:
 
-`ChessDirectory` (default: `media/chess/`) = directory for PGN games  
-`ChessMoveStyle` (default: `figurines`) = moves style, `figurines`, `standard`, or `letters`  
-`ChessShowCoordinates` (default: `0`) = show in the diagram the coordinates, 0 or 1  
-`ChessShowDots` (default: `1`) = show in the diagram the active color, 0 or 1  
-`ChessWidth` (default: `300`) = default diagram width  
-`ChessPieceList` (default: `0`) = use as alternative text a list of the pieces, instead of the FEN code, 0 or 1  
+`ChessDirectory` = directory for PGN games  
+`ChessMoveStyle` = moves style, `figurines`, `standard`, or `letters`  
+`ChessShowCoordinates` = show in the diagram the coordinates, 0 or 1  
+`ChessShowDots` = show in the diagram the active color, 0 or 1  
+`ChessWidth` = default diagram width  
+`ChessPieceList` = use as alternative text a list of the pieces, instead of the FEN code, 0 or 1  
 
 ## Developer
 
