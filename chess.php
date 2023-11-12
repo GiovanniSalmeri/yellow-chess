@@ -727,7 +727,7 @@ class YellowChess {
             if ($pieceNames==["[chessPieces]"]) $pieceNames = array_fill(0, 6, "");
             $target = [];
             foreach ([0, 1] as $color) {
-                $target[$color] = array_map(function($k, $v) use ($pieceNames, $color, $extensionLocation) { return "<img class=\"chess-figurine\" src=\"{$extensionLocation}chess-stack.svg#".$v."-".$color."\" alt=\"".$pieceNames[$k]."\" title=\"".$pieceNames[$k]."\" />"; }, range(0,5), str_split('kqrbnp'));
+                $target[$color] = array_map(function($k, $v) use ($pieceNames, $color, $extensionLocation) { return "<span class=\"chess-figurine ".$v."-".$color."\" alt=\"".$pieceNames[$k]."\" title=\"".$pieceNames[$k]."\"></span>"; }, range(0,5), str_split('kqrbnp'));
             }
         } elseif ($style=="letters") {
             $target[0] = $target[1] = preg_split('/\s*,\s*/', $this->yellow->language->getText("chessPiecesInitial"));

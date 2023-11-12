@@ -1,5 +1,7 @@
 /* Chess extension, https://github.com/GiovanniSalmeri/yellow-chess */
 
+/* Header */
+
 .content header.chess-header {
     padding: 0.5em;
     background-color: #f7f7f7;
@@ -7,9 +9,12 @@
     margin-top: 1em;
     margin-bottom: 1em;
 }
+
+/* Moves */
+
 .content p.chess-moves {
     /* Put in bold if you wish to distinguish better from moves mentioned in the commentary */
-     /*font-weight: bold; */
+    /*font-weight: bold; */
 }
 .content span.chess-move {
     white-space: nowrap;
@@ -18,7 +23,63 @@
     font-weight: normal;
     color: #4682b4;
 }
-.content span.chess-comment img {
-    /* see https://codepen.io/sosuke/pen/Pjoqqp */
-    filter: invert(42%) sepia(92%) saturate(310%) hue-rotate(164deg) brightness(94%) contrast(87%)
+
+/* Figurines */
+
+.content .chess-figurine {
+    display: inline-block;
+    width: 1em;
+    height: 1em;
+    background-color: currentcolor;
+    background-size: 1em 1em;
+    background-repeat: no-repeat;
+    background-position: center center;
+}
+.content .chess-figurine.k-0 {
+    -webkit-mask: url("chess-stack.svg#k-0");
+    mask: url("chess-stack.svg#k-0");
+}
+.content .chess-figurine.q-0 {
+    -webkit-mask: url("chess-stack.svg#q-0");
+    mask: url("chess-stack.svg#q-0");
+}
+.content .chess-figurine.r-0 {
+    -webkit-mask: url("chess-stack.svg#r-0");
+    mask: url("chess-stack.svg#r-0");
+}
+.content .chess-figurine.b-0 {
+    -webkit-mask: url("chess-stack.svg#b-0");
+    mask: url("chess-stack.svg#b-0");
+}
+.content .chess-figurine.n-0 {
+    -webkit-mask: url("chess-stack.svg#n-0");
+    mask: url("chess-stack.svg#n-0");
+}
+.content .chess-figurine.p-0 {
+    -webkit-mask: url("chess-stack.svg#p-0");
+    mask: url("chess-stack.svg#p-0");
+}
+.content .chess-figurine.k-1 {
+    -webkit-mask: url("chess-stack.svg#k-1");
+    mask: url("chess-stack.svg#k-1");
+}
+.content .chess-figurine.q-1 {
+    -webkit-mask: url("chess-stack.svg#q-1");
+    mask: url("chess-stack.svg#q-1");
+}
+.content .chess-figurine.r-1 {
+    -webkit-mask: url("chess-stack.svg#r-1");
+    mask: url("chess-stack.svg#r-1");
+}
+.content .chess-figurine.b-1 {
+    -webkit-mask: url("chess-stack.svg#b-1");
+    mask: url("chess-stack.svg#b-1");
+}
+.content .chess-figurine.n-1 {
+    -webkit-mask: url("chess-stack.svg#n-1");
+    mask: url("chess-stack.svg#n-1");
+}
+.content .chess-figurine.p-1 {
+    -webkit-mask: url("chess-stack.svg#p-1");
+    mask: url("chess-stack.svg#p-1");
 }
