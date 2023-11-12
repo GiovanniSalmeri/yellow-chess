@@ -153,7 +153,7 @@ class YellowChess {
                             $pieceList = isset($mode) ? $this->getFenFromPosition($position) : $chess;
                         }
                         if (is_string_empty($width)) $width = $this->yellow->system->get("chessWidth");
-    	            $svg = $this->drawBoardFromPosition($position);
+                        $svg = $this->drawBoardFromPosition($position);
                         $output .= "<img src=\"data:image/svg+xml;base64,".base64_encode($svg)."\"";
                         $output .= " width=\"".htmlspecialchars($width)."\" height=\"".htmlspecialchars($width)."\"";
                         $output .= " alt=\"".htmlspecialchars($pieceList)."\" title=\"".htmlspecialchars($pieceList)."\"";
@@ -164,7 +164,7 @@ class YellowChess {
                     }
                 }
             } else {
-		$output .= "<strong>[chess: ".implode(", ", $errors)."]</strong>";
+                $output .= "<strong>[chess: ".implode(", ", $errors)."]</strong>";
             }
         }
         return $output;
@@ -590,7 +590,7 @@ class YellowChess {
     // Decode PGN file
     private function getGameFromPgn($fileName) {
         $lines = file($fileName);
-	if ($lines!==false) {
+        if ($lines!==false) {
             $moveText = "";
             $game = [];
             $areTags = true;
