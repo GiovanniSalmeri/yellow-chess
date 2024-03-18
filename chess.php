@@ -14,7 +14,7 @@ class YellowChess {
         $this->yellow->system->setDefault("chessShowDots", "1");
         $this->yellow->system->setDefault("chessWidth", "300");
         $this->yellow->system->setDefault("chessPieceList", "0");
-        $this->yellow->language->setDefaults([
+        $this->yellow->language->setDefaults(array(
             "Language: en",
             "ChessHeader: <b>@whitef vs @blackf</b> (@event, @round, @site @datef): <b>@resultf</b>",
             "ChessColors: White,Black",
@@ -71,7 +71,7 @@ class YellowChess {
             "ChessPiecesInitial: K,D,T,L,P,O",
             "ChessToMove: @color aan zet",
             "ChessComment: Commentaar",
-        ]);
+        ));
     }
 
     // Handle page content of shortcut
