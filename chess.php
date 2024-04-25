@@ -2,7 +2,7 @@
 // Chess extension, https://github.com/GiovanniSalmeri/yellow-chess
 
 class YellowChess {
-    const VERSION = "0.8.18";
+    const VERSION = "0.9.1";
     public $yellow;         // access to API
 
     // Handle initialisation
@@ -75,7 +75,7 @@ class YellowChess {
     }
 
     // Handle page content of shortcut
-    public function onParseContentShortcut($page, $name, $text, $type) {
+    public function onParseContentElement($page, $name, $text, $attributes, $type) {
         $output = null;
         $errors = [];
         if ($name=="chess" && ($type=="block" || $type=="inline")) {
@@ -238,8 +238,8 @@ class YellowChess {
 
     // Draw SVG board
     private function drawBoardFromPosition($position) {
-        $extensionDirectory = $this->yellow->system->get("coreExtensionDirectory");
-        $cssContent = @file_get_contents("{$extensionDirectory}chess-board.css");
+        $workerDirectory = $this->yellow->system->get("coreWorkerDirectory");
+        $cssContent = @file_get_contents("{$workerDirectory}chess-board.css");
         $cssContent = preg_replace([ '/\/\*.*?\*\//', '/\s+/' ], ['', ' '], $cssContent);
         $svgBoard = '<svg class="chess" viewBox="39 39 403 403" version="1.1" xmlns="http://www.w3.org/2000/svg">
 <style><![CDATA['.$cssContent.']]></style>
@@ -368,7 +368,7 @@ class YellowChess {
   </g>
 </g>
 </defs>
-<g id="board" fill="none" stroke="#000"><rect x="40.5" y="40.5" width="400" height="400" fill="#fff"/><rect x="40.5" y="90.5" width="50" height="50" fill="#ccc"/><rect x="40.5" y="190.5" width="50" height="50" fill="#ccc"/><rect x="40.5" y="290.5" width="50" height="50" fill="#ccc"/><rect x="40.5" y="390.5" width="50" height="50" fill="#ccc"/><rect x="90.5" y="40.5" width="50" height="50" fill="#ccc"/><rect x="90.5" y="140.5" width="50" height="50" fill="#ccc"/><rect x="90.5" y="240.5" width="50" height="50" fill="#ccc"/><rect x="90.5" y="340.5" width="50" height="50" fill="#ccc"/><rect x="140.5" y="90.5" width="50" height="50" fill="#ccc"/><rect x="140.5" y="190.5" width="50" height="50" fill="#ccc"/><rect x="140.5" y="290.5" width="50" height="50" fill="#ccc"/><rect x="140.5" y="390.5" width="50" height="50" fill="#ccc"/><rect x="190.5" y="40.5" width="50" height="50" fill="#ccc"/><rect x="190.5" y="140.5" width="50" height="50" fill="#ccc"/><rect x="190.5" y="240.5" width="50" height="50" fill="#ccc"/><rect x="190.5" y="340.5" width="50" height="50" fill="#ccc"/><rect x="240.5" y="90.5" width="50" height="50" fill="#ccc"/><rect x="240.5" y="190.5" width="50" height="50" fill="#ccc"/><rect x="240.5" y="290.5" width="50" height="50" fill="#ccc"/><rect x="240.5" y="390.5" width="50" height="50" fill="#ccc"/><rect x="290.5" y="40.5" width="50" height="50" fill="#ccc"/><rect x="290.5" y="140.5" width="50" height="50" fill="#ccc"/><rect x="290.5" y="240.5" width="50" height="50" fill="#ccc"/><rect x="290.5" y="340.5" width="50" height="50" fill="#ccc"/><rect x="340.5" y="90.5" width="50" height="50" fill="#ccc"/><rect x="340.5" y="190.5" width="50" height="50" fill="#ccc"/><rect x="340.5" y="290.5" width="50" height="50" fill="#ccc"/><rect x="340.5" y="390.5" width="50" height="50" fill="#ccc"/><rect x="390.5" y="40.5" width="50" height="50" fill="#ccc"/><rect x="390.5" y="140.5" width="50" height="50" fill="#ccc"/><rect x="390.5" y="240.5" width="50" height="50" fill="#ccc"/><rect x="390.5" y="340.5" width="50" height="50" fill="#ccc"/></g>
+<g id="board" fill="none" stroke="#000"><rect class="light" x="40.5" y="40.5" width="400" height="400" fill="#fff"/><rect x="40.5" y="90.5" width="50" height="50" fill="#ccc"/><rect x="40.5" y="190.5" width="50" height="50" fill="#ccc"/><rect x="40.5" y="290.5" width="50" height="50" fill="#ccc"/><rect x="40.5" y="390.5" width="50" height="50" fill="#ccc"/><rect x="90.5" y="40.5" width="50" height="50" fill="#ccc"/><rect x="90.5" y="140.5" width="50" height="50" fill="#ccc"/><rect x="90.5" y="240.5" width="50" height="50" fill="#ccc"/><rect x="90.5" y="340.5" width="50" height="50" fill="#ccc"/><rect x="140.5" y="90.5" width="50" height="50" fill="#ccc"/><rect x="140.5" y="190.5" width="50" height="50" fill="#ccc"/><rect x="140.5" y="290.5" width="50" height="50" fill="#ccc"/><rect x="140.5" y="390.5" width="50" height="50" fill="#ccc"/><rect x="190.5" y="40.5" width="50" height="50" fill="#ccc"/><rect x="190.5" y="140.5" width="50" height="50" fill="#ccc"/><rect x="190.5" y="240.5" width="50" height="50" fill="#ccc"/><rect x="190.5" y="340.5" width="50" height="50" fill="#ccc"/><rect x="240.5" y="90.5" width="50" height="50" fill="#ccc"/><rect x="240.5" y="190.5" width="50" height="50" fill="#ccc"/><rect x="240.5" y="290.5" width="50" height="50" fill="#ccc"/><rect x="240.5" y="390.5" width="50" height="50" fill="#ccc"/><rect x="290.5" y="40.5" width="50" height="50" fill="#ccc"/><rect x="290.5" y="140.5" width="50" height="50" fill="#ccc"/><rect x="290.5" y="240.5" width="50" height="50" fill="#ccc"/><rect x="290.5" y="340.5" width="50" height="50" fill="#ccc"/><rect x="340.5" y="90.5" width="50" height="50" fill="#ccc"/><rect x="340.5" y="190.5" width="50" height="50" fill="#ccc"/><rect x="340.5" y="290.5" width="50" height="50" fill="#ccc"/><rect x="340.5" y="390.5" width="50" height="50" fill="#ccc"/><rect x="390.5" y="40.5" width="50" height="50" fill="#ccc"/><rect x="390.5" y="140.5" width="50" height="50" fill="#ccc"/><rect x="390.5" y="240.5" width="50" height="50" fill="#ccc"/><rect x="390.5" y="340.5" width="50" height="50" fill="#ccc"/></g>
 <g id="pieces">';
 
         $columnWidth = $columnRow = 50;
@@ -722,12 +722,12 @@ class YellowChess {
         $translations = null;
         $style = $this->yellow->system->get("chessMoveStyle");
         if ($style==="figurines") {
-            $extensionLocation = $this->yellow->system->get("coreServerBase").$this->yellow->system->get("coreExtensionLocation");
+            $assetLocation = $this->yellow->system->get("coreServerBase").$this->yellow->system->get("coreAssetLocation");
             $pieceNames = preg_split('/\s*,\s*/', $this->yellow->language->getText("chessPieces"));
             if ($pieceNames==["[chessPieces]"]) $pieceNames = array_fill(0, 6, "");
             $target = [];
             foreach ([0, 1] as $color) {
-                $target[$color] = array_map(function($k, $v) use ($pieceNames, $color, $extensionLocation) { return "<span class=\"chess-figurine ".$v."-".$color."\" alt=\"".$pieceNames[$k]."\" title=\"".$pieceNames[$k]."\"></span>"; }, range(0,5), str_split('kqrbnp'));
+                $target[$color] = array_map(function($k, $v) use ($pieceNames, $color, $assetLocation) { return "<span class=\"chess-figurine ".$v."-".$color."\" alt=\"".$pieceNames[$k]."\" title=\"".$pieceNames[$k]."\"></span>"; }, range(0,5), str_split('kqrbnp'));
             }
         } elseif ($style=="letters") {
             $target[0] = $target[1] = preg_split('/\s*,\s*/', $this->yellow->language->getText("chessPiecesInitial"));
@@ -742,8 +742,8 @@ class YellowChess {
     public function onParsePageExtra($page, $name) {
         $output = null;
         if ($name=="header") {
-            $extensionLocation = $this->yellow->system->get("coreServerBase").$this->yellow->system->get("coreExtensionLocation");
-            $output .= "<link rel=\"stylesheet\" type=\"text/css\" media=\"all\" href=\"{$extensionLocation}chess.css\" />\n";
+            $assetLocation = $this->yellow->system->get("coreServerBase").$this->yellow->system->get("coreAssetLocation");
+            $output .= "<link rel=\"stylesheet\" type=\"text/css\" media=\"all\" href=\"{$assetLocation}chess.css\" />\n";
         }
         return $output;
     }

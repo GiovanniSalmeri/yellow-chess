@@ -1,5 +1,5 @@
-Chess 0.8.18
-============
+# Chess 0.9.1
+
 Chess diagrams and games.
 
 <p align="center"><img src="SCREENSHOT.png" alt="Screenshot"></p>

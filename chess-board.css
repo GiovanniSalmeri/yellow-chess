@@ -12,7 +12,7 @@ svg.chess g#board rect {
     /* fill: #B5A642; */ /* brass */
 }
 svg.chess g#board rect.light {
-    fill: #ffffff; /* white */
+    fill: #FFFFFF; /* white */
     /* fill: #F0D9B5; */ /* bisque2 */
     /* fill: #FFCE9E; */ /* burlywood1 */
 }
