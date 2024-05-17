@@ -74,7 +74,7 @@ class YellowChess {
         ));
     }
 
-    // Handle page content of shortcut
+    // Handle page content element
     public function onParseContentElement($page, $name, $text, $attributes, $type) {
         $output = null;
         $errors = [];
